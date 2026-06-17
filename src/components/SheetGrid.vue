@@ -9,20 +9,31 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(row, ri) in rows" :key="ri" :class="{ 'header-row': headerRow && ri === 0 }">
-          <td class="row-num">{{ ri + 1 }}</td>
+        <tr
+          v-for="item in displayRows"
+          :key="item.ri"
+          :class="{ 'header-row': headerRow && item.ri === 0 }"
+        >
+          <td class="row-num">{{ item.ri + 1 }}</td>
           <template v-for="ci in colCount" :key="ci">
-            <td v-if="!row[ci - 1]?.skip"
-                :rowspan="row[ci - 1]?.rowspan > 1 ? row[ci - 1].rowspan : null"
-                :colspan="row[ci - 1]?.colspan > 1 ? row[ci - 1].colspan : null"
-                :style="cellStyle(row[ci - 1])"
+            <td
+              v-if="filtering || !item.row[ci - 1]?.skip"
+              :rowspan="!filtering && item.row[ci - 1]?.rowspan > 1 ? item.row[ci - 1].rowspan : null"
+              :colspan="!filtering && item.row[ci - 1]?.colspan > 1 ? item.row[ci - 1].colspan : null"
+              :style="cellStyle(item.row[ci - 1])"
+              :class="{ sel: selected && selected.ri === item.ri && selected.ci === ci }"
+              @click="onCellClick(item.ri, ci, item.row[ci - 1])"
             >
-              <template v-if="row[ci - 1]?.runs">
-                <span v-for="(run, k) in row[ci - 1].runs" :key="k" :style="runStyle(run)">{{ run.text }}</span>
+              <template v-if="item.row[ci - 1]?.runs">
+                <span v-for="(run, k) in item.row[ci - 1].runs" :key="k" :style="runStyle(run)">{{ run.text }}</span>
               </template>
-              <template v-else>{{ row[ci - 1]?.v ?? '' }}</template>
+              <template v-else>{{ item.row[ci - 1]?.v ?? '' }}</template>
             </td>
           </template>
+        </tr>
+        <tr v-if="!displayRows.length">
+          <td class="row-num"></td>
+          <td :colspan="colCount" class="empty">검색 결과가 없습니다.</td>
         </tr>
       </tbody>
     </table>
@@ -35,11 +46,36 @@ import { computed } from 'vue'
 const props = defineProps({
   rows: { type: Array, required: true },
   headerRow: { type: Boolean, default: true },
+  search: { type: String, default: '' },
+  selected: { type: Object, default: null }, // { ri, ci }
 })
+const emit = defineEmits(['select-cell'])
+
+function onCellClick(ri, ci, cell) {
+  emit('select-cell', {
+    ri,
+    ci,
+    address: colLetter(ci - 1) + (ri + 1),
+    cell: cell || null,
+  })
+}
 
 const colCount = computed(() =>
   props.rows.reduce((m, r) => Math.max(m, r.length), 0)
 )
+
+const filtering = computed(() => props.search.trim().length > 0)
+
+// 검색 시: 일치하는 행만 표시(머리글 행은 항상 유지). 원래 행 인덱스는 보존.
+const displayRows = computed(() => {
+  const all = props.rows.map((row, ri) => ({ row, ri }))
+  if (!filtering.value) return all
+  const q = props.search.trim().toLowerCase()
+  return all.filter(({ row, ri }) => {
+    if (props.headerRow && ri === 0) return true
+    return row.some((c) => c && String(c.v ?? '').toLowerCase().includes(q))
+  })
+})
 
 function colLetter(n) {
   let s = ''
