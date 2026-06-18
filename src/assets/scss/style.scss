@@ -1192,6 +1192,111 @@ table.grid {
   }
 }
 
+// ── 하단 앰비언트 블러 서클 (천천히 서로 크로스하며 이동) ──
+.home-blobs {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 55vh;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden; // 위쪽으로 새어나가지 않게 하단 영역으로 제한
+}
+
+.blob {
+  position: absolute;
+  bottom: -110px; // 원의 아래 일부는 화면 밖 → 하단 글로우 위주로 보이게
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.5; // 은은하게
+  mix-blend-mode: screen; // 다크 배경에서 겹칠 때 밝게 블렌딩
+  will-change: transform;
+}
+
+.b1 {
+  width: 380px;
+  height: 380px;
+  left: 4%;
+  background: rgba(242, 226, 78, 0.72); // 옐로
+  animation: blobCross1 24s ease-in-out infinite;
+}
+.b2 {
+  width: 260px;
+  height: 260px;
+  left: 36%;
+  background: rgba(240, 166, 77, 0.62); // 앰버
+  animation: blobCross2 30s ease-in-out infinite;
+}
+.b3 {
+  width: 480px;
+  height: 480px;
+  left: 58%;
+  background: rgba(242, 226, 78, 0.5); // 옐로(큰 원)
+  animation: blobCross3 34s ease-in-out infinite;
+}
+.b4 {
+  width: 220px;
+  height: 220px;
+  left: 22%;
+  background: rgba(150, 170, 230, 0.45); // 서늘한 톤(대비)
+  animation: blobCross4 28s ease-in-out infinite;
+}
+.b5 {
+  width: 300px;
+  height: 300px;
+  left: 12%;
+  background: rgba(242, 226, 78, 0.55); // 옐로
+  animation: blobCross3 26s ease-in-out infinite;
+  animation-delay: -6s;
+}
+.b6 {
+  width: 200px;
+  height: 200px;
+  left: 48%;
+  background: rgba(240, 166, 77, 0.5); // 앰버
+  animation: blobCross1 32s ease-in-out infinite;
+  animation-delay: -11s;
+}
+.b7 {
+  width: 420px;
+  height: 420px;
+  left: 72%;
+  background: rgba(242, 226, 78, 0.42); // 옐로(큰 원)
+  animation: blobCross4 30s ease-in-out infinite;
+  animation-delay: -9s;
+}
+.b8 {
+  width: 240px;
+  height: 240px;
+  left: 84%;
+  background: rgba(150, 170, 230, 0.4); // 서늘한 톤
+  animation: blobCross2 36s ease-in-out infinite;
+  animation-delay: -15s;
+}
+
+// 좌우로 크게 가로질러 서로 교차 + 살짝 상하 흔들림
+@keyframes blobCross1 {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(42vw, -40px); }
+}
+@keyframes blobCross2 {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-30vw, -60px); }
+}
+@keyframes blobCross3 {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-36vw, -30px); }
+}
+@keyframes blobCross4 {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(46vw, -55px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .blob { animation: none; }
+}
+
 // 상단 네비게이션 (메뉴 정중앙)
 .home-nav {
   flex-shrink: 0;
@@ -1998,7 +2103,7 @@ table.grid {
 
 // ── 대시보드 다크 테마 (이미지 기준: 다크 + 옐로) — .home 범위로 한정 ──
 .home {
-  --dash-card: #232327;
+  --dash-card: rgba(35, 35, 39, 0.8); // 반투명 — 하단 앰비언트가 비치게
   --dash-line: rgba(255, 255, 255, 0.07);
   --dash-text: #f2f2f4;
   --dash-muted: #9a9aa2;
@@ -2033,7 +2138,7 @@ table.grid {
     color: var(--dash-on-accent);
   }
 
-  // 카드 공통
+  // 카드 공통 — 배경에 알파를 줘 하단 앰비언트(블롭)가 은은히 비치게
   .card {
     background: var(--dash-card);
     border-color: var(--dash-line);

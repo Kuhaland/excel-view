@@ -1,5 +1,17 @@
 <template>
   <div class="home">
+    <!-- 하단 앰비언트 블러 서클(천천히 크로스 이동) -->
+    <div class="home-blobs" aria-hidden="true">
+      <span class="blob b1"></span>
+      <span class="blob b2"></span>
+      <span class="blob b3"></span>
+      <span class="blob b4"></span>
+      <span class="blob b5"></span>
+      <span class="blob b6"></span>
+      <span class="blob b7"></span>
+      <span class="blob b8"></span>
+    </div>
+
     <!-- 상단 네비게이션 -->
     <header class="home-nav">
       <div class="home-brand">
