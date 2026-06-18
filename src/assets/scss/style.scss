@@ -1329,7 +1329,7 @@ table.grid {
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: 1.15fr 1fr 1.15fr 0.95fr;
+  grid-template-columns: 0.8fr 1.5fr 1.1fr 0.95fr;
   grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
   gap: 16px;
 
@@ -1341,23 +1341,17 @@ table.grid {
 }
 
 // 차트/스탯 카드는 세로로 늘어나 카드 높이를 채움
-.g-deal,
+.g-trend,
 .g-leads,
 .g-new,
-.g-revenue {
+.g-revenue,
+.g-pay {
   display: flex;
   flex-direction: column;
 }
-.g-deal {
-  grid-column: 1;
+.g-trend {
+  grid-column: 1 / span 2;
   grid-row: 1;
-}
-.g-stats {
-  grid-column: 2;
-  grid-row: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
 }
 .g-leads {
   grid-column: 3;
@@ -1375,85 +1369,57 @@ table.grid {
   grid-row: 2;
 }
 .g-revenue {
-  grid-column: 2 / span 2;
+  grid-column: 2;
+  grid-row: 2;
+}
+.g-pay {
+  grid-column: 3;
   grid-row: 2;
 }
 
-// g-stats 안의 두 미니 카드는 높이를 균등 분배
-.g-stats .mini-stat {
-  flex: 1;
+// 세그먼트 토글 (년/월/일)
+.seg {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  background: #f1f1ee;
+  border-radius: 10px;
 }
 
-// 축이 있는 막대 차트 (Deal Closure / Revenue) — 카드 안에서 남는 높이 채움
-.deal-chart,
-.rev-chart {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  gap: 8px;
-  margin-top: 12px;
-}
+.seg-btn {
+  border: 0;
+  background: transparent;
+  color: #5a5c64;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 8px;
+  cursor: pointer;
 
-.y-axis {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  font-size: 10px;
-  color: var(--muted);
-  flex-shrink: 0;
-  padding-bottom: 18px;
-}
+  &:hover {
+    color: #2a2c32;
+  }
 
-.rev-y {
-  padding-bottom: 0;
-}
-
-.vbars {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  align-items: flex-end;
-  gap: 10px;
-  height: 100%;
-}
-
-.vbar-col {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  height: 100%;
-  justify-content: flex-end;
-}
-
-.vbar {
-  width: 100%;
-  max-width: 30px;
-  background: #bfe0f5;
-  border-radius: 6px 6px 0 0;
-}
-
-.vbar-label {
-  margin-top: 8px;
-  font-size: 11px;
-  color: var(--muted);
-}
-
-// 작은 스탯 카드
-.mini-stat {
-  position: relative;
-
-  .big-stat {
-    margin: 8px 0 2px;
+  &.on {
+    background: #fff;
+    color: var(--ink);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
   }
 }
 
-.corner-arrow {
-  position: absolute;
-  top: 18px;
-  right: 18px;
-  font-size: 18px;
-  color: #b7c9a6;
+// 차트 컨테이너 — 카드 안에서 남는 높이 채움
+.trend-chart {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  margin-top: 12px;
+}
+
+.trend-chart .echart,
+.lead-wrap .echart {
+  width: 100%;
+  height: 100%;
 }
 
 // Lead Trends 영역 차트
@@ -1462,30 +1428,6 @@ table.grid {
   flex: 1;
   min-height: 0;
   margin-top: 14px;
-  display: flex;
-  align-items: flex-end;
-}
-
-.lead-tip {
-  position: absolute;
-  top: 6px;
-  left: 50%;
-  transform: translateX(-30%);
-  background: #16161a;
-  color: #fff;
-  font-size: 11px;
-  font-weight: 600;
-  padding: 4px 9px;
-  border-radius: 7px;
-  white-space: nowrap;
-  z-index: 1;
-}
-
-.area-svg {
-  width: 100%;
-  height: 100%;
-  min-height: 90px;
-  display: block;
 }
 
 // 우측 레일: 캘린더 + 일정
@@ -1539,30 +1481,86 @@ table.grid {
 
 .cal-day {
   flex: 1;
-  height: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 5px 0;
   border: 0;
   border-radius: 8px;
   background: transparent;
   color: #4a4c54;
   font-family: inherit;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
+
+  .cal-wd {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--muted);
+  }
 
   &:hover {
     background: #f1f1ee;
   }
 
+  // 오늘(미선택) 표시 — 숫자 아래 점
+  &.today:not(.active) .cal-num {
+    position: relative;
+  }
+  &.today:not(.active) .cal-num::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: -5px;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--ink);
+    transform: translateX(-50%);
+  }
+
   &.active {
     background: var(--ink);
     color: #fff;
+
+    .cal-wd {
+      color: rgba(255, 255, 255, 0.7);
+    }
   }
 }
 
 .schedule-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 15px;
   font-weight: 700;
   margin: 16px 0 6px;
+}
+
+.schedule-count {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.schedule-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex: 1;
+  min-height: 0;
+  color: var(--muted);
+  font-size: 13px;
+
+  .material-symbols-outlined {
+    font-size: 30px;
+    opacity: 0.6;
+  }
 }
 
 .schedule {
@@ -1615,12 +1613,12 @@ table.grid {
   }
 }
 
-// New properties (Swiper)
+// 메뉴 판매 순위
 .np-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .np-title {
@@ -1628,129 +1626,236 @@ table.grid {
   font-weight: 700;
 }
 
-.np-nav {
+.rank-period {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.rank-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.rank-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 0;
+}
+
+.rank-no {
+  flex-shrink: 0;
+  width: 20px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+
+  // 상위 3위 강조
+  &.r1 { color: #e8893a; }
+  &.r2 { color: #c79a4a; }
+  &.r3 { color: #b7935f; }
+}
+
+.rank-icon {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  border: 0;
-  border-radius: 8px;
-  background: transparent;
-  color: #5a5c64;
-  cursor: pointer;
-
-  &:hover {
-    background: #f1f1ee;
-  }
+  color: rgba(40, 44, 50, 0.65);
 
   .material-symbols-outlined {
-    font-size: 20px;
+    font-size: 19px;
   }
 }
 
-.np-swiper {
-  width: 100%;
+.rank-info {
   flex: 1;
-  min-height: 0;
+  min-width: 0;
+}
 
-  .swiper-wrapper {
-    height: 100%;
-  }
+.rank-name {
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
-  .swiper-slide {
+.rank-bar {
+  margin-top: 5px;
+  height: 5px;
+  border-radius: 3px;
+  background: #f1f1ee;
+  overflow: hidden;
+
+  span {
+    display: block;
     height: 100%;
-    display: flex;
-    flex-direction: column;
+    border-radius: 3px;
+    background: var(--ink); // 인라인 색상으로 메뉴별 덮어씀
   }
 }
 
-.np-photo {
-  flex: 1;
-  min-height: 110px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: rgba(255, 255, 255, 0.85);
-
-  .material-symbols-outlined {
-    font-size: 44px;
-  }
-}
-
-.np-info {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 10px;
-  margin-top: 12px;
+.rank-count {
   flex-shrink: 0;
-}
-
-.np-name {
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.np-avail {
-  font-size: 12px;
-  color: var(--muted);
-  margin-top: 2px;
-}
-
-.np-price {
   font-size: 13px;
   font-weight: 700;
+  font-variant-numeric: tabular-nums;
   text-align: right;
 }
 
-// Revenue
-.dropdown-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 12px;
-  font-weight: 600;
-  color: #4a4c54;
-  background: #f3f2ef;
-  border-radius: 999px;
-  padding: 6px 12px;
-  white-space: nowrap;
-
-  .material-symbols-outlined {
-    font-size: 16px;
-  }
-}
-
+// 메뉴별 판매금액
 .g-revenue .big-stat {
   margin-top: 4px;
 }
 
-.rev-bars {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  align-items: flex-end;
-  gap: 3px;
-  height: 100%;
+// 카드 폭이 좁을 때 날짜 선택(달력)이 잘리지 않도록 헤더를 줄바꿈 허용
+.g-revenue .card-head {
+  flex-wrap: wrap;
+  gap: 8px;
+}
 
-  span {
-    flex: 1;
-    min-width: 2px;
-    background: linear-gradient(180deg, #aee37e, #7fce4f);
-    border-radius: 3px 3px 0 0;
-    min-height: 4px;
+.date-range {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.date-input {
+  min-width: 0;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: #4a4c54;
+  background: #f3f2ef;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 5px 8px;
+  cursor: pointer;
+
+  &:focus {
+    outline: none;
+    border-color: var(--ink);
+    background: #fff;
   }
 }
 
-.rev-months {
+.date-sep {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.sales-body {
+  flex: 1;
+  min-height: 0;
   display: flex;
-  justify-content: space-between;
-  margin-top: 8px;
-  padding-left: 36px;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.donut-wrap {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+
+  .echart {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.donut-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.donut-total {
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.donut-label {
   font-size: 11px;
   color: var(--muted);
+  margin-top: 2px;
+}
+
+.sales-legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 0 0 auto;
+  min-width: 0;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+    font-size: 12.5px;
+  }
+
+  .lg-dot {
+    flex-shrink: 0;
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+  }
+
+  .lg-name {
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .lg-amt {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .lg-pct {
+    flex-shrink: 0;
+    width: 38px;
+    text-align: right;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+// 결제 건수 카드
+.pay-chart {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  margin-top: 12px;
+
+  .echart {
+    width: 100%;
+    height: 100%;
+  }
 }
 
 // CTA 카드
@@ -1781,16 +1886,19 @@ table.grid {
   .home-grid {
     grid-template-columns: 1fr 1fr;
   }
-  .g-deal,
-  .g-stats,
+  .g-trend,
   .g-leads,
   .g-rail,
-  .g-new {
+  .g-new,
+  .g-pay {
     grid-column: auto;
     grid-row: auto;
   }
-  .g-revenue {
+  .g-trend {
     grid-column: 1 / span 2;
+  }
+  .g-revenue {
+    grid-column: auto;
     grid-row: auto;
   }
 }
