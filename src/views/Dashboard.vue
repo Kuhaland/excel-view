@@ -154,7 +154,7 @@
         <ul class="rank-list">
           <li v-for="(m, i) in menuRanking" :key="m.name" class="rank-row">
             <span class="rank-no" :class="'r' + (i + 1)">{{ i + 1 }}</span>
-            <span class="rank-icon" :style="{ background: m.color }">
+            <span class="rank-icon" :style="{ background: m.iconBg, color: m.iconFg }">
               <span class="material-symbols-outlined">{{ m.icon }}</span>
             </span>
             <div class="rank-info">
@@ -416,28 +416,54 @@ const reservations = computed(() => {
   return resvStore[key]
 })
 
+// ── 차트 브랜드 컬러 (다크 테마: 기본 옐로 + 그레이) ──
+const BRAND_BASE = '#f2e24e' // 기본(포인트) 컬러 = 옐로
+const BRAND_BASE_RGB = '242, 226, 78'
+const CHART_DIM = '#6f6f77' // 다크 카드에서 보이는 보조 그레이(팔레트 끝색)
+
+function mixHex(a, b, t) {
+  const ch = (s) => [1, 3, 5].map((i) => parseInt(s.slice(i, i + 2), 16))
+  const [ar, ag, ab] = ch(a)
+  const [br, bg, bb] = ch(b)
+  return '#' + [ar + (br - ar) * t, ag + (bg - ag) * t, ab + (bb - ab) * t]
+    .map((v) => Math.round(v).toString(16).padStart(2, '0')).join('')
+}
+// 기본 옐로 → 그레이로 보간한 n단계 팔레트(다크 배경에서 모두 가독)
+function brandPalette(n) {
+  return n <= 1
+    ? [BRAND_BASE]
+    : Array.from({ length: n }, (_, i) => mixHex(BRAND_BASE, CHART_DIM, (i / (n - 1)) * 0.9))
+}
+const MENU_COLORS = brandPalette(5)
+
 // ── 메뉴 판매 순위(임시 데이터, 판매 건수 내림차순) ──
-// 메뉴별 색상 — 순위/판매금액 차트에서 동일 메뉴 = 동일 색, 서로는 분리도 높은 팔레트
+// 색상은 판매금액 도넛과 동일한 브랜드 팔레트 사용(동일 메뉴 = 동일 색)
+// 아이콘: 연한 틴트 배경 + 진한 글리프로 밝은~어두운 팔레트 전 구간 가독성 확보
 const menuRanking = [
-  { name: '시그니처 버거', count: 1240, icon: 'lunch_dining', color: '#f6b48f' },
-  { name: '트러플 크림 파스타', count: 980, icon: 'ramen_dining', color: '#a3c4f3' },
-  { name: '마르게리타 피자', count: 760, icon: 'local_pizza', color: '#9ee0bd' },
-  { name: '딸기 티라미수', count: 540, icon: 'cake', color: '#f7bdd8' },
-  { name: '아메리카노', count: 430, icon: 'local_cafe', color: '#c9bdf2' },
-]
+  { name: '시그니처 버거', count: 1240, icon: 'lunch_dining' },
+  { name: '트러플 크림 파스타', count: 980, icon: 'ramen_dining' },
+  { name: '마르게리타 피자', count: 760, icon: 'local_pizza' },
+  { name: '딸기 티라미수', count: 540, icon: 'cake' },
+  { name: '아메리카노', count: 430, icon: 'local_cafe' },
+].map((m, i) => ({
+  ...m,
+  color: MENU_COLORS[i],
+  iconBg: mixHex(MENU_COLORS[i], '#1c1c20', 0.82), // 어두운 틴트 칩(다크 카드)
+  iconFg: MENU_COLORS[i], // 밝은 글리프
+}))
 const rankMax = Math.max(...menuRanking.map((m) => m.count))
 function rankBarW(count) {
   return (count / rankMax) * 100 + '%'
 }
 
 // ── 메뉴별 판매금액 (날짜 범위 선택) ──
-// 메뉴별 일평균 판매금액(만원) + 색상
+// 메뉴별 일평균 판매금액(만원) + 색상(기본 컬러→블랙 팔레트)
 const MENU_SALES = [
-  { name: '시그니처 버거', daily: 62, color: '#f6b48f' },
-  { name: '트러플 크림 파스타', daily: 49, color: '#a3c4f3' },
-  { name: '마르게리타 피자', daily: 38, color: '#9ee0bd' },
-  { name: '딸기 티라미수', daily: 27, color: '#f7bdd8' },
-  { name: '아메리카노', daily: 21, color: '#c9bdf2' },
+  { name: '시그니처 버거', daily: 62, color: MENU_COLORS[0] },
+  { name: '트러플 크림 파스타', daily: 49, color: MENU_COLORS[1] },
+  { name: '마르게리타 피자', daily: 38, color: MENU_COLORS[2] },
+  { name: '딸기 티라미수', daily: 27, color: MENU_COLORS[3] },
+  { name: '아메리카노', daily: 21, color: MENU_COLORS[4] },
 ]
 
 function toISO(d) {
@@ -482,9 +508,9 @@ function salesPct(amount) {
 const leadDays = ['월', '화', '수', '목', '금', '토', '일']
 const leadVals = [88, 96, 84, 102, 118, 152, 110]
 
-// ── ECharts 공통 ──
-const MUTED = '#8a8f98'
-const GRID = 'rgba(0, 0, 0, 0.06)'
+// ── ECharts 공통 (다크 테마) ──
+const MUTED = '#9a9aa2'
+const GRID = 'rgba(255, 255, 255, 0.08)'
 const CHART_FW = 700 // 차트 내 텍스트 굵기
 
 // 매출 추이 — 막대 (년/월/일 토글)
@@ -515,7 +541,7 @@ const trendOption = computed(() => ({
     barMaxWidth: 34,
     itemStyle: {
       borderRadius: [6, 6, 0, 0],
-      color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: '#aee37e' }, { offset: 1, color: '#7fce4f' }] },
+      color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: BRAND_BASE }, { offset: 1, color: mixHex(BRAND_BASE, CHART_DIM, 0.55) }] },
     },
   }],
 }))
@@ -540,10 +566,10 @@ const leadOption = computed(() => ({
     smooth: true,
     showSymbol: false,
     symbolSize: 7,
-    lineStyle: { color: '#e8893a', width: 2 },
-    itemStyle: { color: '#e8893a' },
+    lineStyle: { color: BRAND_BASE, width: 2 },
+    itemStyle: { color: BRAND_BASE },
     areaStyle: {
-      color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(240, 166, 77, 0.5)' }, { offset: 1, color: 'rgba(240, 166, 77, 0)' }] },
+      color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: `rgba(${BRAND_BASE_RGB}, 0.55)` }, { offset: 1, color: `rgba(${BRAND_BASE_RGB}, 0)` }] },
     },
   }],
 }))
@@ -567,14 +593,15 @@ const salesOption = computed(() => ({
 }))
 
 // ── 결제 건수 (수단별 + 할인/쿠폰 사용량) ──
+const PAY_COLORS = brandPalette(5) // 기본 컬러→블랙
 const PAY_METHODS = [
-  { name: '카드', count: 1840, color: '#a3c4f3' },
-  { name: '현금', count: 520, color: '#9ee0bd' },
-  { name: '상품권', count: 180, color: '#f6b48f' },
+  { name: '카드', count: 1840, color: PAY_COLORS[0] },
+  { name: '현금', count: 520, color: PAY_COLORS[1] },
+  { name: '상품권', count: 180, color: PAY_COLORS[2] },
 ]
 const PROMO = [
-  { name: '할인 적용', count: 430, color: '#f7bdd8' },
-  { name: '쿠폰 사용', count: 260, color: '#c9bdf2' },
+  { name: '할인 적용', count: 430, color: PAY_COLORS[3] },
+  { name: '쿠폰 사용', count: 260, color: PAY_COLORS[4] },
 ]
 const payItems = [...PAY_METHODS, ...PROMO]
 const paymentTotal = PAY_METHODS.reduce((a, i) => a + i.count, 0)
@@ -592,7 +619,7 @@ const payOption = computed(() => {
       data: items.map((i) => i.name),
       axisLine: { show: false },
       axisTick: { show: false },
-      axisLabel: { color: '#4a4c54', fontSize: 12, fontWeight: CHART_FW },
+      axisLabel: { color: '#d7d7dc', fontSize: 12, fontWeight: CHART_FW },
     },
     series: [{
       type: 'bar',

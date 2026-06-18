@@ -166,7 +166,7 @@ const sheetFilter = ref('')
 const selectedCell = ref(null)
 const fileInput = ref(null)
 
-const userEmail = 'leehx78@smartscore.kr'
+const userEmail = 'leehx78@gmail.com'
 const userName = computed(() => userEmail.split('@')[0])
 const avatarInitial = computed(() => userName.value.charAt(0).toUpperCase())
 

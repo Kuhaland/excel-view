@@ -306,11 +306,16 @@ thead th,
     color: #fff;
   }
 
-  // 활성: 흰 알약
+  // 활성: 옐로 알약(메인 컬러)
   &.active {
-    background: #fff;
-    color: #161619;
+    background: #f2e24e;
+    color: #1b1b1f;
     font-weight: 600;
+
+    &:hover {
+      background: #f2e24e;
+      color: #1b1b1f;
+    }
   }
 }
 
@@ -432,7 +437,6 @@ thead th,
 
 .profile-meta {
   line-height: 1.25;
-  min-width: 160px;
   white-space: nowrap;
 }
 
@@ -1133,22 +1137,58 @@ table.grid {
 
 // ── 홈(대시보드) · 풀페이지 라이트 레이아웃 ───────────────────────────────
 .home {
+  position: relative;
+  isolation: isolate; // 회전 레이어(::before, z-index:-1)를 .home 안에 가둠
   height: 100vh;
   width: 100%;
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
-  background: linear-gradient(180deg, #e6f1de 0%, #f4f5f1 240px, #f4f5f1 100%);
+  background: #141416; // 다크 베이스(폴백)
+  color: #f2f2f4;
+  color-scheme: dark; // 네이티브 폼(날짜 선택 등) 다크 렌더링
   padding: 18px 28px 28px;
 
   scrollbar-width: thin;
-  scrollbar-color: #cdd0d6 transparent;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
   &::-webkit-scrollbar {
     width: 9px;
   }
   &::-webkit-scrollbar-thumb {
-    background: #cdd0d6;
+    background: rgba(255, 255, 255, 0.2);
     border-radius: 9px;
+  }
+}
+
+// 천천히 회전하는 다크 그라디언트 배경 레이어
+.home::before {
+  content: "";
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 200vmax; // 회전해도 화면 모서리까지 항상 덮도록 크게
+  height: 200vmax;
+  background: linear-gradient(180deg, #232327 35%, #1a1a1d 50%, #0f0f11 65%);
+  z-index: -1;
+  pointer-events: none;
+  will-change: transform;
+  animation: bgSpin 50s linear infinite;
+}
+
+@keyframes bgSpin {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+// 모션 최소화 설정 시 회전 정지
+@media (prefers-reduced-motion: reduce) {
+  .home::before {
+    animation: none;
+    transform: translate(-50%, -50%);
   }
 }
 
@@ -1171,8 +1211,8 @@ table.grid {
     width: auto;
     max-width: 160px;
     object-fit: contain;
-    // 공통 블랙 컬러
-    filter: brightness(0);
+    // 다크 배경: 로고를 흰색으로
+    filter: brightness(0) invert(1);
     cursor: pointer;
 
     // 클릭/hover 시 X축으로 한 바퀴 회전
@@ -1954,6 +1994,141 @@ table.grid {
   flex: 0 0 auto;
   width: 100%;
   justify-content: center;
+}
+
+// ── 대시보드 다크 테마 (이미지 기준: 다크 + 옐로) — .home 범위로 한정 ──
+.home {
+  --dash-card: #232327;
+  --dash-line: rgba(255, 255, 255, 0.07);
+  --dash-text: #f2f2f4;
+  --dash-muted: #9a9aa2;
+  --dash-accent: #f2e24e;
+  --dash-on-accent: #1b1b1f;
+
+  // 상단 네비
+  .home-pills {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+  .pill-indicator { background: var(--dash-accent); }
+  .hpill { color: #b6b6bd; }
+  .hpill.on { color: var(--dash-on-accent); }
+  .hicon {
+    background: rgba(255, 255, 255, 0.06);
+    color: #cfcfd5;
+    &:hover { background: rgba(255, 255, 255, 0.12); }
+  }
+  .hicon-tip {
+    background: #2b2b30;
+    color: #fff;
+    &::before { border-bottom-color: #2b2b30; }
+  }
+  .profile-name { color: var(--dash-text); }
+  .profile-mail { color: var(--dash-muted); }
+
+  // 타이틀 / Share
+  .home-title { color: var(--dash-text); }
+  .home-share {
+    background: var(--dash-accent);
+    color: var(--dash-on-accent);
+  }
+
+  // 카드 공통
+  .card {
+    background: var(--dash-card);
+    border-color: var(--dash-line);
+  }
+  .card-title { color: var(--dash-text); }
+  .big-unit,
+  .stat-sub { color: var(--dash-muted); }
+
+  // 세그먼트 토글
+  .seg { background: rgba(255, 255, 255, 0.06); }
+  .seg-btn {
+    color: #b0b0b7;
+    &:hover { color: #fff; }
+    &.on {
+      background: var(--dash-accent);
+      color: var(--dash-on-accent);
+      box-shadow: none;
+    }
+  }
+
+  // 캘린더
+  .cal-nav {
+    color: #c2c2c8;
+    &:hover { background: rgba(255, 255, 255, 0.08); }
+  }
+  .cal-month { color: var(--dash-text); }
+  .cal-days { border-bottom-color: var(--dash-line); }
+  .cal-day {
+    color: #d4d4da;
+    .cal-wd { color: var(--dash-muted); }
+    &:hover { background: rgba(255, 255, 255, 0.07); }
+    &.today:not(.active) .cal-num::after { background: var(--dash-accent); }
+    &.active {
+      background: var(--dash-accent);
+      color: var(--dash-on-accent);
+      .cal-wd { color: rgba(0, 0, 0, 0.55); }
+    }
+  }
+
+  // 예약 일정
+  .schedule-title { color: var(--dash-text); }
+  .schedule-count,
+  .schedule-empty { color: var(--dash-muted); }
+  .schedule .sch-time { color: var(--dash-muted); }
+  .schedule .sch-text { color: var(--dash-text); }
+  .sch-check {
+    border-color: rgba(255, 255, 255, 0.25);
+    &.done {
+      background: var(--dash-accent);
+      border-color: var(--dash-accent);
+      color: var(--dash-on-accent);
+    }
+  }
+
+  // 메뉴 판매 순위
+  .np-title { color: var(--dash-text); }
+  .rank-period { color: var(--dash-muted); }
+  .rank-no {
+    color: var(--dash-muted);
+    &.r1 { color: var(--dash-accent); }
+    &.r2 { color: #d8cf86; }
+    &.r3 { color: #bdbd9a; }
+  }
+  .rank-name,
+  .rank-count { color: var(--dash-text); }
+  .rank-bar { background: rgba(255, 255, 255, 0.08); }
+
+  // 판매금액(도넛) + 결제
+  .donut-total { color: var(--dash-text); }
+  .donut-label { color: var(--dash-muted); }
+  .lg-name,
+  .lg-amt { color: var(--dash-text); }
+  .lg-pct { color: var(--dash-muted); }
+  .date-input {
+    background: rgba(255, 255, 255, 0.07);
+    color: #d8d8dd;
+    border-color: transparent;
+    &:focus {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: var(--dash-accent);
+    }
+  }
+  .date-sep { color: var(--dash-muted); }
+
+  // Pro CTA — 옐로 히어로 카드
+  .cta-card {
+    background: var(--dash-accent);
+    border-color: var(--dash-accent);
+  }
+  .cta-title { color: var(--dash-on-accent); }
+  .cta-sub { color: rgba(27, 27, 31, 0.72); }
+  .btn-dark.wide {
+    background: #1b1b1f;
+    color: #fff;
+  }
 }
 
 // 좁은 화면 대응
