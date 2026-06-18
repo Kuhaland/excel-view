@@ -19,3 +19,6 @@ export const MENU_GROUPS = [
 
 // 평탄화된 전체 메뉴 (라벨/아이콘 조회용)
 export const MENUS = MENU_GROUPS.flatMap((g) => g.items)
+
+// LNB/가운데 메뉴에서 빼고 상단 우측에 배치할 메뉴 id
+export const RIGHT_IDS = ['help', 'settings']
