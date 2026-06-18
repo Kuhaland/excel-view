@@ -1,3 +1,5 @@
+@use "fonts";
+
 // ── ProfitPulse 스타일 토큰 ───────────────────────────────────────────────
 $tan: #c4b69b; // 바깥 배경 (따뜻한 베이지)
 $ink: #161619; // 사이드바 (블랙)
@@ -19,6 +21,23 @@ $muted: #8b8d96;
   --line: #{$line};
   --text: #{$text};
   --muted: #{$muted};
+
+  // 기본 폰트 스택 — 라틴/숫자는 Inter, 한글은 Pretendard로 폴백
+  --font-base: "Inter", "Pretendard", -apple-system, BlinkMacSystemFont,
+    "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+
+  // 사이즈별 자간(letter-spacing) 토큰 — Inter 기준
+  --tracking-caption: 0; // 12px 이하 작은 글씨/캡션: 좁히지 않음
+  --tracking-body: -0.011em; // 본문
+  --tracking-heading: -0.02em; // 제목(h1~h3)
+  --tracking-uppercase: 0.04em; // 대문자: 넓힘(+0.02~0.05em)
+}
+
+// Pretendard를 메인 폰트로 둘 때(opt-in: <html>/<body>에 .font-pretendard) 본문 자간을 더 좁힘
+.font-pretendard {
+  --font-base: "Pretendard", "Inter", -apple-system, BlinkMacSystemFont,
+    "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --tracking-body: -0.02em;
 }
 
 * {
@@ -50,9 +69,50 @@ body,
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  font-family: var(--font-base);
+  letter-spacing: var(--tracking-body);
   background: var(--main-bg);
   color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+// 제목: heading 토큰
+h1,
+h2,
+h3 {
+  letter-spacing: var(--tracking-heading);
+}
+
+// 12px 이하 작은 글씨/캡션: 자간을 좁히지 않음(0)
+small,
+.caption {
+  letter-spacing: var(--tracking-caption);
+}
+
+// 대문자 텍스트: 자간을 넓힘
+.uppercase {
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-uppercase);
+}
+
+// 12px 이하 소형 UI 라벨 — 본문 음수 자간을 상속받지 않도록 caption 토큰으로 복원
+.nav-badge,
+thead th,
+.profile-mail,
+.chip,
+.badge,
+.detail-section-title,
+.hicon-tip,
+.seg-btn,
+.cal-wd,
+.schedule-count,
+.rank-period,
+.date-input,
+.date-sep,
+.donut-label {
+  letter-spacing: var(--tracking-caption);
 }
 
 // ── 전체화면 레이아웃 ─────────────────────────────────────────────────────
@@ -1113,6 +1173,21 @@ table.grid {
     object-fit: contain;
     // 공통 블랙 컬러
     filter: brightness(0);
+    cursor: pointer;
+
+    // 클릭/hover 시 X축으로 한 바퀴 회전
+    &.spin {
+      animation: logoFlipX 0.6s ease;
+    }
+  }
+}
+
+@keyframes logoFlipX {
+  from {
+    transform: perspective(400px) rotateX(0deg);
+  }
+  to {
+    transform: perspective(400px) rotateX(360deg);
   }
 }
 
@@ -1247,7 +1322,7 @@ table.grid {
 
 .home-title {
   font-size: 32px;
-  font-weight: 700;
+  font-weight: 800;
   margin: 0;
 }
 
@@ -1298,7 +1373,7 @@ table.grid {
 
 .big-stat {
   font-size: 36px;
-  font-weight: 700;
+  font-weight: 800;
   line-height: 1.1;
 
   &.sm {

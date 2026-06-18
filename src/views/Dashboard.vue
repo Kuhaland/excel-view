@@ -3,7 +3,15 @@
     <!-- 상단 네비게이션 -->
     <header class="home-nav">
       <div class="home-brand">
-        <img class="home-logo" :src="logo" alt="로고" />
+        <img
+          class="home-logo"
+          :class="{ spin: logoSpin }"
+          :src="logo"
+          alt="로고"
+          @click="logoSpin = true"
+          @mouseenter="logoSpin = true"
+          @animationend="logoSpin = false"
+        />
       </div>
 
       <nav class="home-pills" @mouseleave="hoverIndex = null">
@@ -225,6 +233,9 @@ const props = defineProps({
   avatarInitial: { type: String, default: '' },
 })
 const emit = defineEmits(['navigate', 'open-sheet', 'file'])
+
+// 로고 X축 회전 애니메이션 (클릭/hover 시 트리거, 끝나면 해제해 재실행 가능)
+const logoSpin = ref(false)
 
 // ── 상단 메뉴 + 슬라이딩 인디케이터 ──
 // 우측(home-right)으로 보낼 메뉴 id
@@ -474,13 +485,16 @@ const leadVals = [88, 96, 84, 102, 118, 152, 110]
 // ── ECharts 공통 ──
 const MUTED = '#8a8f98'
 const GRID = 'rgba(0, 0, 0, 0.06)'
+const CHART_FW = 700 // 차트 내 텍스트 굵기
 
 // 매출 추이 — 막대 (년/월/일 토글)
 const trendOption = computed(() => ({
+  textStyle: { fontWeight: CHART_FW },
   grid: { left: 4, right: 12, top: 16, bottom: 8, containLabel: true },
   tooltip: {
     trigger: 'axis',
     axisPointer: { type: 'shadow' },
+    textStyle: { fontWeight: CHART_FW },
     formatter: (p) => won(p[0].value),
   },
   xAxis: {
@@ -488,11 +502,11 @@ const trendOption = computed(() => ({
     data: trendCur.value.labels,
     axisLine: { lineStyle: { color: GRID } },
     axisTick: { show: false },
-    axisLabel: { color: MUTED, fontSize: 11 },
+    axisLabel: { color: MUTED, fontSize: 11, fontWeight: CHART_FW },
   },
   yAxis: {
     type: 'value',
-    axisLabel: { color: MUTED, fontSize: 10, formatter: (v) => wonTick(v) },
+    axisLabel: { color: MUTED, fontSize: 10, fontWeight: CHART_FW, formatter: (v) => wonTick(v) },
     splitLine: { lineStyle: { color: GRID } },
   },
   series: [{
@@ -508,15 +522,16 @@ const trendOption = computed(() => ({
 
 // 신규 고객 — 영역(라인)
 const leadOption = computed(() => ({
+  textStyle: { fontWeight: CHART_FW },
   grid: { left: 0, right: 0, top: 12, bottom: 4, containLabel: true },
-  tooltip: { trigger: 'axis', formatter: (p) => p[0].value + '명' },
+  tooltip: { trigger: 'axis', textStyle: { fontWeight: CHART_FW }, formatter: (p) => p[0].value + '명' },
   xAxis: {
     type: 'category',
     data: leadDays,
     boundaryGap: false,
     axisLine: { lineStyle: { color: GRID } },
     axisTick: { show: false },
-    axisLabel: { color: MUTED, fontSize: 11 },
+    axisLabel: { color: MUTED, fontSize: 11, fontWeight: CHART_FW },
   },
   yAxis: { type: 'value', show: false, scale: true },
   series: [{
@@ -535,8 +550,10 @@ const leadOption = computed(() => ({
 
 // 메뉴별 판매금액 — 도넛(구성비)
 const salesOption = computed(() => ({
+  textStyle: { fontWeight: CHART_FW },
   tooltip: {
     trigger: 'item',
+    textStyle: { fontWeight: CHART_FW },
     formatter: (p) => `${p.name}: ${won(p.value)} (${p.percent}%)`,
   },
   series: [{
@@ -566,21 +583,22 @@ const paymentTotal = PAY_METHODS.reduce((a, i) => a + i.count, 0)
 const payOption = computed(() => {
   const items = [...payItems].reverse() // 위에서부터 카드 순으로 표시
   return {
+    textStyle: { fontWeight: CHART_FW },
     grid: { left: 4, right: 52, top: 6, bottom: 2, containLabel: true },
-    tooltip: { trigger: 'item', formatter: (p) => `${p.name}: ${p.value.toLocaleString()}건` },
+    tooltip: { trigger: 'item', textStyle: { fontWeight: CHART_FW }, formatter: (p) => `${p.name}: ${p.value.toLocaleString()}건` },
     xAxis: { type: 'value', axisLabel: { show: false }, axisLine: { show: false }, axisTick: { show: false }, splitLine: { lineStyle: { color: GRID } } },
     yAxis: {
       type: 'category',
       data: items.map((i) => i.name),
       axisLine: { show: false },
       axisTick: { show: false },
-      axisLabel: { color: '#4a4c54', fontSize: 12, fontWeight: 600 },
+      axisLabel: { color: '#4a4c54', fontSize: 12, fontWeight: CHART_FW },
     },
     series: [{
       type: 'bar',
       barWidth: 14,
       data: items.map((i) => ({ value: i.count, itemStyle: { color: i.color, borderRadius: [0, 6, 6, 0] } })),
-      label: { show: true, position: 'right', formatter: (p) => p.value.toLocaleString() + '건', color: MUTED, fontSize: 11, fontWeight: 600 },
+      label: { show: true, position: 'right', formatter: (p) => p.value.toLocaleString() + '건', color: MUTED, fontSize: 11, fontWeight: CHART_FW },
     }],
   }
 })
