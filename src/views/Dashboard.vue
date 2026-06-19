@@ -1,15 +1,11 @@
 <template>
-  <div class="home">
+  <div class="home" :class="isDark ? 'theme-dark' : 'theme-light'">
     <!-- 하단 앰비언트 블러 서클(천천히 크로스 이동) -->
     <div class="home-blobs" aria-hidden="true">
-      <span class="blob b1"></span>
-      <span class="blob b2"></span>
-      <span class="blob b3"></span>
-      <span class="blob b4"></span>
-      <span class="blob b5"></span>
-      <span class="blob b6"></span>
-      <span class="blob b7"></span>
-      <span class="blob b8"></span>
+      <span class="blob b1"></span><span class="blob b2"></span>
+      <span class="blob b3"></span><span class="blob b4"></span>
+      <span class="blob b5"></span><span class="blob b6"></span>
+      <span class="blob b7"></span><span class="blob b8"></span>
     </div>
 
     <!-- 상단 네비게이션 -->
@@ -44,6 +40,12 @@
       </nav>
 
       <div class="home-right">
+        <ToggleSwitch
+          v-model="isDark"
+          on-icon="dark_mode"
+          off-icon="light_mode"
+          aria-label="다크/라이트 모드 전환"
+        />
         <button
           v-for="m in rightMenus"
           :key="m.id"
@@ -69,172 +71,241 @@
 
     <!-- 타이틀 행 -->
     <div class="home-title-row">
-      <h1 class="home-title">Overview</h1>
+      <div>
+        <h1 class="home-title">오늘의 매장 현황</h1>
+        <p class="home-subtitle">
+          <span class="live-dot"></span> 영업 중 · {{ todayLabel }}
+        </p>
+      </div>
       <button class="home-share" @click="$emit('navigate', 'viewer')">
-        <span class="material-symbols-outlined">ios_share</span> Share
+        <span class="material-symbols-outlined">ios_share</span> 리포트
       </button>
     </div>
 
-    <div class="home-grid">
-      <!-- 매출 추이 (년/월/일) -->
-      <div class="card g-trend">
-        <div class="card-head">
-          <div>
-            <div class="card-title">매출 추이</div>
-            <div class="big-stat">{{ trendTotalLabel }}<span class="big-unit"> {{ trendCur.sub }}</span></div>
+    <div class="dash">
+      <!-- ── 1. 상단 KPI ───────────────────────────── -->
+      <section class="kpi-row">
+        <div v-for="k in kpis" :key="k.label" class="card kpi-card">
+          <div class="kpi-top">
+            <span class="kpi-label">{{ k.label }}</span>
+            <span class="kpi-ic material-symbols-outlined" :style="{ color: k.color, background: k.tint }">{{ k.icon }}</span>
           </div>
-          <div class="seg">
-            <button
-              v-for="u in trendUnits"
-              :key="u.id"
-              type="button"
-              class="seg-btn"
-              :class="{ on: trendUnit === u.id }"
-              @click="setTrendUnit(u.id)"
-            >{{ u.label }}</button>
-          </div>
-        </div>
-        <div class="trend-chart">
-          <v-chart class="echart" :option="trendOption" autoresize />
-        </div>
-      </div>
-
-      <!-- 신규 고객 추이 -->
-      <div class="card g-leads">
-        <div class="card-title">매장 방문객 수</div>
-        <div class="deal-top">
-          <span class="big-stat sm">124</span>
-          <span class="stat-sub">일 평균</span>
-        </div>
-        <div class="lead-wrap">
-          <v-chart class="echart" :option="leadOption" autoresize />
-        </div>
-      </div>
-
-      <!-- 우측 레일: 예약 일정 + Pro -->
-      <div class="g-rail">
-        <div class="card rail-card">
-          <div class="cal-head">
-            <button class="cal-nav" @click="shiftWeek(-1)"><span class="material-symbols-outlined">chevron_left</span></button>
-            <span class="cal-month">{{ calLabel }}</span>
-            <button class="cal-nav" @click="shiftWeek(1)"><span class="material-symbols-outlined">chevron_right</span></button>
-          </div>
-          <div class="cal-days">
-            <button
-              v-for="d in weekDays"
-              :key="d.key"
-              type="button"
-              class="cal-day"
-              :class="{ active: d.isSelected, today: d.isToday }"
-              @click="selectDay(d.date)"
-            >
-              <span class="cal-wd">{{ d.wd }}</span>
-              <span class="cal-num">{{ d.day }}</span>
-            </button>
-          </div>
-
-          <div class="schedule-title">
-            예약 일정
-            <span class="schedule-count">{{ reservations.length }}건</span>
-          </div>
-          <ul v-if="reservations.length" class="schedule">
-            <li v-for="(s, i) in reservations" :key="i">
-              <span class="sch-time">{{ s.t }}</span>
-              <span class="sch-text">{{ s.s }}</span>
-              <Checkbox v-model="s.done" />
-            </li>
-          </ul>
-          <div v-else class="schedule-empty">
-            <span class="material-symbols-outlined">event_available</span>
-            예약이 없습니다
-          </div>
-        </div>
-
-        <div class="card cta-card">
-          <div class="cta-title">Pro 플랜</div>
-          <div class="cta-sub">매장 운영에 필요한 모든 기능: 예약, 주문, 재고, 매출 분석</div>
-          <button class="btn-dark wide">Pro 시작하기 $9.99</button>
-        </div>
-      </div>
-
-      <!-- 메뉴 판매 순위 -->
-      <div class="card g-new">
-        <div class="np-head">
-          <span class="np-title">메뉴 판매 순위</span>
-          <span class="rank-period">이번 주</span>
-        </div>
-        <ul class="rank-list">
-          <li v-for="(m, i) in menuRanking" :key="m.name" class="rank-row">
-            <span class="rank-no" :class="'r' + (i + 1)">{{ i + 1 }}</span>
-            <span class="rank-icon" :style="{ background: m.iconBg, color: m.iconFg }">
-              <span class="material-symbols-outlined">{{ m.icon }}</span>
+          <div class="kpi-value">{{ k.value }}</div>
+          <div class="kpi-foot">
+            <span class="kpi-delta" :class="k.delta >= 0 ? 'up' : 'down'">
+              <span class="material-symbols-outlined">{{ k.delta >= 0 ? 'arrow_upward' : 'arrow_downward' }}</span>
+              {{ Math.abs(k.delta) }}%
             </span>
-            <div class="rank-info">
-              <div class="rank-name">{{ m.name }}</div>
-              <div class="rank-bar"><span :style="{ width: rankBarW(m.count), background: m.color }"></span></div>
-            </div>
-            <span class="rank-count">{{ m.count.toLocaleString() }}건</span>
-          </li>
-        </ul>
-      </div>
-
-      <!-- 메뉴별 판매금액 -->
-      <div class="card g-revenue">
-        <div class="card-head">
-          <div>
-            <div class="card-title">메뉴별 판매금액</div>
-            <div class="big-stat">{{ won(salesTotal) }}<span class="big-unit"> {{ rangeDays }}일 합계</span></div>
-          </div>
-          <div class="date-range">
-            <input type="date" class="date-input" v-model="rangeStart" :max="rangeEnd" />
-            <span class="date-sep">~</span>
-            <input type="date" class="date-input" v-model="rangeEnd" :min="rangeStart" :max="todayISO" />
+            <span class="kpi-subt">{{ k.sub }}</span>
           </div>
         </div>
-        <div class="sales-body">
-          <div class="donut-wrap">
-            <v-chart class="echart" :option="salesOption" autoresize />
-            <div class="donut-center">
-              <div class="donut-total">₩{{ wonTick(salesTotal) }}</div>
-              <div class="donut-label">총 판매금액</div>
+      </section>
+
+      <!-- ── 2. 매출 추이 + 결제수단 ───────────────── -->
+      <section class="dash-row r-2-1">
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <div class="card-title">매출 추이</div>
+              <div class="big-stat">{{ won(salesSum) }}<span class="big-unit"> {{ salesCur.sub }}</span></div>
+            </div>
+            <div class="seg">
+              <button
+                v-for="u in salesPeriods"
+                :key="u.id"
+                type="button"
+                class="seg-btn"
+                :class="{ on: salesPeriod === u.id }"
+                @click="salesPeriod = u.id"
+              >{{ u.label }}</button>
             </div>
           </div>
-          <ul class="sales-legend">
-            <li v-for="m in menuAmounts" :key="m.name">
-              <span class="lg-dot" :style="{ background: m.color }"></span>
-              <span class="lg-name">{{ m.name }}</span>
-              <span class="lg-amt">{{ won(m.amount) }}</span>
-              <span class="lg-pct">{{ salesPct(m.amount) }}%</span>
+          <div class="chart-box">
+            <v-chart class="echart" :option="salesTrendOption" autoresize />
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">결제수단 비중</div>
+            <span class="stat-sub">오늘</span>
+          </div>
+          <div class="donut-card">
+            <div class="donut-box">
+              <v-chart class="echart" :option="payDonutOption" autoresize />
+              <div class="donut-center">
+                <div class="donut-total">₩{{ wonTick(payTotal) }}</div>
+                <div class="donut-label">결제 총액</div>
+              </div>
+            </div>
+            <ul class="legend">
+              <li v-for="(p, i) in payMethods" :key="p.name">
+                <span class="lg-dot" :style="{ background: menuColors[i] }"></span>
+                <span class="lg-name">{{ p.name }}</span>
+                <span class="lg-pct">{{ pctOf(p.value, payTotal) }}%</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── 3. 메뉴 분석 ──────────────────────────── -->
+      <h2 class="dash-h">메뉴 분석</h2>
+      <section class="dash-row r-1-1">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">베스트셀러 TOP 5</div>
+            <span class="stat-sub">판매량 · 매출</span>
+          </div>
+          <ul class="rank-list rank-list--menu">
+            <li v-for="(m, i) in bestsellers" :key="m.name" class="rank-row">
+              <span class="rank-no" :class="'r' + (i + 1)">{{ i + 1 }}</span>
+              <div class="rank-info">
+                <div class="rank-line">
+                  <span class="rank-name">{{ m.name }}</span>
+                  <span class="rank-rev">{{ won(m.rev) }}</span>
+                </div>
+                <div class="rank-bar"><span :style="{ width: barW(m.rev, bestMax), background: menuColors[i] }"></span></div>
+              </div>
+              <span class="rank-count">{{ m.qty }}개</span>
             </li>
           </ul>
         </div>
-      </div>
 
-      <!-- 결제 건수 (수단별 + 할인/쿠폰) -->
-      <div class="card g-pay">
-        <div class="card-head">
-          <div>
-            <div class="card-title">결제 건수</div>
-            <div class="big-stat sm">{{ paymentTotal.toLocaleString() }}<span class="big-unit"> 건 결제</span></div>
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">카테고리별 매출 비중</div>
+            <span class="stat-sub">{{ won(categoryTotal) }}</span>
+          </div>
+          <div class="hbars">
+            <div v-for="(c, i) in categories" :key="c.name" class="hbar-row">
+              <span class="hbar-name">{{ c.name }}</span>
+              <div class="hbar-track"><span :style="{ width: pctOf(c.value, categoryTotal) + '%', background: menuColors[i] }"></span></div>
+              <span class="hbar-val">{{ pctOf(c.value, categoryTotal) }}%</span>
+            </div>
           </div>
         </div>
-        <div class="pay-chart">
-          <v-chart class="echart" :option="payOption" autoresize />
+      </section>
+
+      <!-- ── 4. 주문·채널 ──────────────────────────── -->
+      <h2 class="dash-h">주문 · 채널</h2>
+      <section class="dash-row r-1-1">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">채널별 매출 비중</div>
+            <span class="stat-sub">홀 · 포장 · 배달</span>
+          </div>
+          <div class="donut-card">
+            <div class="donut-box">
+              <v-chart class="echart" :option="channelDonutOption" autoresize />
+              <div class="donut-center">
+                <div class="donut-total">₩{{ wonTick(channelTotal) }}</div>
+                <div class="donut-label">매출 총액</div>
+              </div>
+            </div>
+            <ul class="legend">
+              <li v-for="(c, i) in channels" :key="c.name">
+                <span class="lg-dot" :style="{ background: menuColors[i] }"></span>
+                <span class="lg-name">{{ c.name }}</span>
+                <span class="lg-pct">{{ pctOf(c.value, channelTotal) }}%</span>
+              </li>
+            </ul>
+          </div>
         </div>
-      </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">현재 주문 상태</div>
+            <span class="stat-sub">실시간</span>
+          </div>
+          <div class="status-row">
+            <div v-for="s in orderStatus" :key="s.name" class="status-tile" :class="'t-' + s.tone">
+              <span class="status-ic material-symbols-outlined">{{ s.icon }}</span>
+              <div class="status-count">{{ s.count }}</div>
+              <div class="status-name">{{ s.name }}</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── 5. 보조 정보 ──────────────────────────── -->
+      <h2 class="dash-h">고객 · 운영</h2>
+      <section class="dash-row r-3">
+        <!-- 신규 vs 재방문 -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">신규 vs 재방문</div>
+            <span class="stat-sub">오늘</span>
+          </div>
+          <div class="split-bar">
+            <span class="split-seg split-new" :style="{ width: newRet.newPct + '%' }"></span>
+            <span class="split-seg split-ret" :style="{ width: newRet.retPct + '%' }"></span>
+          </div>
+          <div class="split-legend">
+            <div><span class="lg-dot dot-new"></span> 신규 <b>{{ newRet.newPct }}%</b> ({{ newRet.newCnt }}명)</div>
+            <div><span class="lg-dot dot-ret"></span> 재방문 <b>{{ newRet.retPct }}%</b> ({{ newRet.retCnt }}명)</div>
+          </div>
+        </div>
+
+        <!-- 리뷰 요약 -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">리뷰 요약</div>
+            <span class="stat-sub">{{ review.count.toLocaleString() }}개</span>
+          </div>
+          <div class="rv-head">
+            <span class="rv-avg">{{ review.avg.toFixed(1) }}</span>
+            <span class="rv-stars">
+              <span
+                v-for="(s, i) in starList(review.avg)"
+                :key="i"
+                class="material-symbols-outlined"
+                :class="{ filled: s !== 'empty' }"
+              >{{ s === 'half' ? 'star_half' : 'star' }}</span>
+            </span>
+          </div>
+          <ul class="rv-list">
+            <li v-for="(r, i) in review.recent" :key="i">
+              <div class="rv-top">
+                <span class="rv-name">{{ r.name }}</span>
+                <span class="rv-mini">
+                  <span v-for="n in r.stars" :key="n" class="material-symbols-outlined filled">star</span>
+                </span>
+              </div>
+              <p class="rv-text">{{ r.text }}</p>
+            </li>
+          </ul>
+        </div>
+
+        <!-- 재고 알림 -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">재고 알림</div>
+            <span class="stat-sub">{{ stockAlerts.length }}건</span>
+          </div>
+          <ul class="stock-list">
+            <li v-for="s in stockAlerts" :key="s.name" class="stock-row" :class="'s-' + s.tone">
+              <span class="stock-ic material-symbols-outlined">{{ s.tone === 'danger' ? 'error' : 'warning' }}</span>
+              <span class="stock-name">{{ s.name }}</span>
+              <span class="stock-qty">{{ s.qty }}</span>
+              <span class="stock-tag">{{ s.level }}</span>
+            </li>
+          </ul>
+        </div>
+      </section>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
 import { BarChart, LineChart, PieChart } from 'echarts/charts'
 import { GridComponent, TooltipComponent } from 'echarts/components'
 import VChart from 'vue-echarts'
 import logo from '../assets/images/logo.png'
-import Checkbox from '../components/Checkbox.vue'
+import ToggleSwitch from '../components/ToggleSwitch.vue'
 
 use([CanvasRenderer, BarChart, LineChart, PieChart, GridComponent, TooltipComponent])
 
@@ -246,16 +317,24 @@ const props = defineProps({
 })
 const emit = defineEmits(['navigate', 'open-sheet', 'file'])
 
-// 로고 X축 회전 애니메이션 (클릭/hover 시 트리거, 끝나면 해제해 재실행 가능)
+// ── 컬러 모드 (다크/라이트) ──
+const STORE_KEY = 'dash-theme'
+const stored = (() => {
+  try { return localStorage.getItem(STORE_KEY) } catch { return null }
+})()
+const isDark = ref(stored ? stored === 'dark' : false) // 기본 라이트
+watch(isDark, (v) => {
+  try { localStorage.setItem(STORE_KEY, v ? 'dark' : 'light') } catch { /* ignore */ }
+})
+
+// 로고 X축 회전 애니메이션
 const logoSpin = ref(false)
 
 // ── 상단 메뉴 + 슬라이딩 인디케이터 ──
-// 우측(home-right)으로 보낼 메뉴 id
 const RIGHT_IDS = ['help', 'settings']
 const rightMenus = computed(() =>
   RIGHT_IDS.map((id) => props.menus.find((m) => m.id === id)).filter(Boolean)
 )
-// 홈 메뉴는 제외 (가운데에는 시트 뷰어/요약/최근/통계만)
 const pills = computed(() => props.menus.filter((m) => !RIGHT_IDS.includes(m.id)))
 const hoverIndex = ref(null)
 const indicatorTarget = computed(() => hoverIndex.value)
@@ -280,159 +359,32 @@ function moveIndicator() {
   }
 }
 watch(hoverIndex, () => moveIndicator())
-onMounted(() => {
-  window.addEventListener('resize', moveIndicator)
-})
-onBeforeUnmount(() => {
-  window.removeEventListener('resize', moveIndicator)
-})
+onMounted(() => window.addEventListener('resize', moveIndicator))
+onBeforeUnmount(() => window.removeEventListener('resize', moveIndicator))
+function onPill(p) { emit('navigate', p.id) }
 
-function onPill(p) {
-  emit('navigate', p.id)
-}
+// ── 오늘 날짜 라벨 ──
+const WD = ['일', '월', '화', '수', '목', '금', '토']
+const today = new Date()
+const todayLabel = `${today.getMonth() + 1}월 ${today.getDate()}일 (${WD[today.getDay()]})`
 
-
-// ── 원화 포맷 ──
-// 값 단위는 만원. 정확 표기는 ₩, 축 라벨은 만/억으로 축약
+// ── 원화 포맷 (값 단위: 만원) ──
 function won(manwon) {
-  return '₩' + (manwon * 10000).toLocaleString('ko-KR')
+  return '₩' + Math.round(manwon * 10000).toLocaleString('ko-KR')
 }
 function wonTick(manwon) {
   if (manwon === 0) return '0'
   if (manwon >= 10000) return +(manwon / 10000).toFixed(1) + '억'
-  return manwon.toLocaleString() + '만'
+  return Math.round(manwon).toLocaleString() + '만'
+}
+function pctOf(v, total) {
+  return total ? Math.round((v / total) * 100) : 0
+}
+function barW(v, max) {
+  return (v / max) * 100 + '%'
 }
 
-// ── 매출 추이(년/월/일) 임시 데이터 (단위: 만원) ──
-const TREND = {
-  day: {
-    sub: '오늘',
-    labels: ['월', '화', '수', '목', '금', '토', '일'],
-    data: [420, 510, 470, 630, 880, 1200, 950],
-  },
-  month: {
-    sub: '이번 달',
-    labels: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
-    data: [9800, 10200, 8800, 11500, 13200, 15800, 14100, 12600, 11900, 13400, 15200, 18600],
-  },
-  year: {
-    sub: '올해',
-    labels: ['2021', '2022', '2023', '2024', '2025', '2026'],
-    data: [98000, 112000, 125000, 141000, 158000, 92000],
-  },
-}
-const trendUnits = [
-  { id: 'year', label: '년' },
-  { id: 'month', label: '월' },
-  { id: 'day', label: '일' },
-]
-const trendUnit = ref('month')
-const trendCur = computed(() => TREND[trendUnit.value])
-const trendTotalLabel = computed(() => won(trendCur.value.data[trendCur.value.data.length - 1]))
-
-function setTrendUnit(id) {
-  trendUnit.value = id
-}
-
-// ── 예약 캘린더 ──
-const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
-const today = new Date()
-today.setHours(0, 0, 0, 0)
-const selectedDate = ref(new Date(today))
-
-function startOfWeek(d) {
-  const x = new Date(d)
-  const offset = (x.getDay() + 6) % 7 // 월요일 시작
-  x.setDate(x.getDate() - offset)
-  x.setHours(0, 0, 0, 0)
-  return x
-}
-function sameDay(a, b) {
-  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
-}
-function dateKey(d) {
-  return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`
-}
-
-// 선택된 날짜가 속한 주(월~일) 7일
-const weekDays = computed(() => {
-  const start = startOfWeek(selectedDate.value)
-  return Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(start)
-    d.setDate(start.getDate() + i)
-    return {
-      date: d,
-      key: dateKey(d),
-      day: d.getDate(),
-      wd: WEEKDAYS[d.getDay()],
-      isToday: sameDay(d, today),
-      isSelected: sameDay(d, selectedDate.value),
-    }
-  })
-})
-
-const calLabel = computed(() => {
-  const d = selectedDate.value
-  const base = `${d.getMonth() + 1}월 ${d.getDate()}일`
-  return sameDay(d, today) ? `오늘 · ${base}` : `${base} (${WEEKDAYS[d.getDay()]})`
-})
-
-function shiftWeek(delta) {
-  const d = new Date(selectedDate.value)
-  d.setDate(d.getDate() + delta * 7)
-  selectedDate.value = d
-}
-function selectDay(d) {
-  selectedDate.value = new Date(d)
-}
-
-// 날짜별 임시 예약 데이터 풀(빈 날짜 포함)
-const RESV_POOL = [
-  [
-    { t: '12:00', s: '4인 · 창가석', done: true },
-    { t: '13:00', s: '6인 · 룸', done: false },
-    { t: '18:30', s: '단체 10인 예약', done: false },
-    { t: '19:30', s: '2인 · 기념일', done: false },
-  ],
-  [
-    { t: '11:30', s: '2인 · 바 테이블', done: true },
-    { t: '12:30', s: '4인 · 창가석', done: true },
-    { t: '13:30', s: '비즈니스 미팅 8인', done: false },
-    { t: '18:00', s: '단체 12인 예약', done: false },
-    { t: '20:00', s: '생일 케이크 요청', done: false },
-  ],
-  [
-    { t: '12:00', s: '6인 · 룸', done: false },
-    { t: '19:00', s: '커플 디너 2인', done: false },
-  ],
-  [
-    { t: '11:00', s: '오픈 케이터링 준비', done: true },
-    { t: '13:00', s: '4인 · 창가석', done: true },
-    { t: '17:30', s: '와인 페어링 6인', done: false },
-    { t: '18:30', s: '단체 15인 예약', done: false },
-    { t: '19:30', s: '2인 · 기념일', done: false },
-    { t: '21:00', s: '심야 바 4인', done: false },
-  ],
-  [], // 예약 없는 날
-]
-
-// 토글 상태가 날짜별로 유지되도록 캐시
-const resvStore = reactive({})
-const reservations = computed(() => {
-  const key = dateKey(selectedDate.value)
-  if (!resvStore[key]) {
-    const d = selectedDate.value
-    const idx = (d.getDate() + d.getDay()) % RESV_POOL.length
-    resvStore[key] = RESV_POOL[idx].map((r) => ({ ...r }))
-  }
-  return resvStore[key]
-})
-
-// ── 차트 브랜드 컬러 (다크 테마: 기본 옐로 + 그레이) ──
-const BRAND_BASE = '#f2e24e' // 기본(포인트) 컬러 = 옐로
-const BRAND_BASE_RGB = '242, 226, 78'
-const CHART_DIM = '#6f6f77' // 다크 카드에서 보이는 보조 그레이(팔레트 끝색)
-
+// ── 차트 컬러 (다크/라이트 모드별 반응형) ──
 function mixHex(a, b, t) {
   const ch = (s) => [1, 3, 5].map((i) => parseInt(s.slice(i, i + 2), 16))
   const [ar, ag, ab] = ch(a)
@@ -440,205 +392,153 @@ function mixHex(a, b, t) {
   return '#' + [ar + (br - ar) * t, ag + (bg - ag) * t, ab + (bb - ab) * t]
     .map((v) => Math.round(v).toString(16).padStart(2, '0')).join('')
 }
-// 기본 옐로 → 그레이로 보간한 n단계 팔레트(다크 배경에서 모두 가독)
-function brandPalette(n) {
-  return n <= 1
-    ? [BRAND_BASE]
-    : Array.from({ length: n }, (_, i) => mixHex(BRAND_BASE, CHART_DIM, (i / (n - 1)) * 0.9))
-}
-const MENU_COLORS = brandPalette(5)
+const CC = computed(() => (isDark.value
+  ? { muted: '#9a9aa2', grid: 'rgba(255,255,255,0.08)', accent: '#f2e24e', dim: '#6f6f77', menuFrom: '#f2e24e', menuTo: '#6f6f77' }
+  : { muted: '#6b6d75', grid: 'rgba(0,0,0,0.08)', accent: '#caa11f', dim: '#e2d49a', menuFrom: '#caa11f', menuTo: '#5f4a12' }))
+const CHART_FW = 700
 
-// ── 메뉴 판매 순위(임시 데이터, 판매 건수 내림차순) ──
-// 색상은 판매금액 도넛과 동일한 브랜드 팔레트 사용(동일 메뉴 = 동일 색)
-// 아이콘: 연한 틴트 배경 + 진한 글리프로 밝은~어두운 팔레트 전 구간 가독성 확보
-const menuRanking = [
-  { name: '시그니처 버거', count: 1240, icon: 'lunch_dining' },
-  { name: '트러플 크림 파스타', count: 980, icon: 'ramen_dining' },
-  { name: '마르게리타 피자', count: 760, icon: 'local_pizza' },
-  { name: '딸기 티라미수', count: 540, icon: 'cake' },
-  { name: '아메리카노', count: 430, icon: 'local_cafe' },
-].map((m, i) => ({
-  ...m,
-  color: MENU_COLORS[i],
-  iconBg: mixHex(MENU_COLORS[i], '#1c1c20', 0.82), // 어두운 틴트 칩(다크 카드)
-  iconFg: MENU_COLORS[i], // 밝은 글리프
-}))
-const rankMax = Math.max(...menuRanking.map((m) => m.count))
-function rankBarW(count) {
-  return (count / rankMax) * 100 + '%'
-}
+// 5색 팔레트(모드별)
+const menuColors = computed(() =>
+  Array.from({ length: 5 }, (_, i) => mixHex(CC.value.menuFrom, CC.value.menuTo, (i / 4) * 0.9))
+)
 
-// ── 메뉴별 판매금액 (날짜 범위 선택) ──
-// 메뉴별 일평균 판매금액(만원) + 색상(기본 컬러→블랙 팔레트)
-const MENU_SALES = [
-  { name: '시그니처 버거', daily: 62, color: MENU_COLORS[0] },
-  { name: '트러플 크림 파스타', daily: 49, color: MENU_COLORS[1] },
-  { name: '마르게리타 피자', daily: 38, color: MENU_COLORS[2] },
-  { name: '딸기 티라미수', daily: 27, color: MENU_COLORS[3] },
-  { name: '아메리카노', daily: 21, color: MENU_COLORS[4] },
+// ── 1. KPI (임시 데이터) ──
+const kpis = [
+  { label: '오늘 매출', value: '₩3,820,000', delta: 12.4, sub: '전일 대비', icon: 'payments', color: '#10b981', tint: 'rgba(16,185,129,0.15)' },
+  { label: '주문 건수', value: '142건', delta: 8.1, sub: '완료 134 · 취소 8', icon: 'receipt_long', color: '#3b82f6', tint: 'rgba(59,130,246,0.15)' },
+  { label: '객단가', value: '₩26,900', delta: -3.2, sub: '전일 대비', icon: 'sell', color: '#8b5cf6', tint: 'rgba(139,92,246,0.15)' },
+  { label: '테이블 회전율', value: '4.8회', delta: 5.6, sub: '전일 대비', icon: 'table_restaurant', color: '#f59e0b', tint: 'rgba(245,158,11,0.16)' },
 ]
 
-function toISO(d) {
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const dd = String(d.getDate()).padStart(2, '0')
-  return `${d.getFullYear()}-${m}-${dd}`
+// ── 2. 매출 추이 (일=시간대 / 주=요일 / 월=주차), 단위 만원 ──
+const SALES = {
+  day: { sub: '오늘', unit: '시', labels: ['11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21'], data: [28, 82, 96, 54, 33, 29, 40, 72, 138, 150, 96] },
+  week: { sub: '이번 주', unit: '', labels: ['월', '화', '수', '목', '금', '토', '일'], data: [210, 235, 248, 256, 320, 420, 360] },
+  month: { sub: '이번 달', unit: '', labels: ['1주', '2주', '3주', '4주', '5주'], data: [1480, 1620, 1560, 1740, 980] },
 }
-// 요일·메뉴별로 결정적 변동을 줘서 기간에 따라 구성비가 달라지게 함
-function dayFactor(menuIdx, date) {
-  return 0.7 + 0.6 * Math.abs(Math.sin((date.getDay() + 1) * (menuIdx + 2) / 3))
-}
-
-const todayISO = toISO(today)
-const rangeStartInit = new Date(today)
-rangeStartInit.setDate(rangeStartInit.getDate() - 29)
-const rangeStart = ref(toISO(rangeStartInit))
-const rangeEnd = ref(todayISO)
-
-const rangeDays = computed(() => {
-  const s = new Date(rangeStart.value)
-  const e = new Date(rangeEnd.value)
-  const n = Math.round((e - s) / 86400000) + 1
-  return n > 0 ? n : 0
-})
-
-// 선택 기간의 메뉴별 판매금액 합계(만원)
-const menuAmounts = computed(() => {
-  const s = new Date(rangeStart.value); s.setHours(0, 0, 0, 0)
-  const e = new Date(rangeEnd.value); e.setHours(0, 0, 0, 0)
-  const sums = MENU_SALES.map(() => 0)
-  for (let t = new Date(s); t <= e; t.setDate(t.getDate() + 1)) {
-    MENU_SALES.forEach((m, idx) => { sums[idx] += Math.round(m.daily * dayFactor(idx, t)) })
-  }
-  return MENU_SALES.map((m, idx) => ({ ...m, amount: sums[idx] }))
-})
-const salesTotal = computed(() => menuAmounts.value.reduce((a, m) => a + m.amount, 0))
-function salesPct(amount) {
-  return salesTotal.value ? Math.round((amount / salesTotal.value) * 100) : 0
-}
-
-// 신규 고객(요일별 임의 데이터)
-const leadDays = ['월', '화', '수', '목', '금', '토', '일']
-const leadVals = [88, 96, 84, 102, 118, 152, 110]
-
-// ── ECharts 공통 (다크 테마) ──
-const MUTED = '#9a9aa2'
-const GRID = 'rgba(255, 255, 255, 0.08)'
-const CHART_FW = 700 // 차트 내 텍스트 굵기
-
-// 매출 추이 — 막대 (년/월/일 토글)
-const trendOption = computed(() => ({
-  textStyle: { fontWeight: CHART_FW },
-  grid: { left: 4, right: 12, top: 16, bottom: 8, containLabel: true },
-  tooltip: {
-    trigger: 'axis',
-    axisPointer: { type: 'shadow' },
-    textStyle: { fontWeight: CHART_FW },
-    formatter: (p) => won(p[0].value),
-  },
-  xAxis: {
-    type: 'category',
-    data: trendCur.value.labels,
-    axisLine: { lineStyle: { color: GRID } },
-    axisTick: { show: false },
-    axisLabel: { color: MUTED, fontSize: 11, fontWeight: CHART_FW },
-  },
-  yAxis: {
-    type: 'value',
-    axisLabel: { color: MUTED, fontSize: 10, fontWeight: CHART_FW, formatter: (v) => wonTick(v) },
-    splitLine: { lineStyle: { color: GRID } },
-  },
-  series: [{
-    type: 'bar',
-    data: trendCur.value.data,
-    barMaxWidth: 34,
-    itemStyle: {
-      borderRadius: [6, 6, 0, 0],
-      color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: BRAND_BASE }, { offset: 1, color: mixHex(BRAND_BASE, CHART_DIM, 0.55) }] },
-    },
-  }],
-}))
-
-// 신규 고객 — 영역(라인)
-const leadOption = computed(() => ({
-  textStyle: { fontWeight: CHART_FW },
-  grid: { left: 0, right: 0, top: 12, bottom: 4, containLabel: true },
-  tooltip: { trigger: 'axis', textStyle: { fontWeight: CHART_FW }, formatter: (p) => p[0].value + '명' },
-  xAxis: {
-    type: 'category',
-    data: leadDays,
-    boundaryGap: false,
-    axisLine: { lineStyle: { color: GRID } },
-    axisTick: { show: false },
-    axisLabel: { color: MUTED, fontSize: 11, fontWeight: CHART_FW },
-  },
-  yAxis: { type: 'value', show: false, scale: true },
-  series: [{
-    type: 'line',
-    data: leadVals,
-    smooth: true,
-    showSymbol: false,
-    symbolSize: 7,
-    lineStyle: { color: BRAND_BASE, width: 2 },
-    itemStyle: { color: BRAND_BASE },
-    areaStyle: {
-      color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: `rgba(${BRAND_BASE_RGB}, 0.55)` }, { offset: 1, color: `rgba(${BRAND_BASE_RGB}, 0)` }] },
-    },
-  }],
-}))
-
-// 메뉴별 판매금액 — 도넛(구성비)
-const salesOption = computed(() => ({
-  textStyle: { fontWeight: CHART_FW },
-  tooltip: {
-    trigger: 'item',
-    textStyle: { fontWeight: CHART_FW },
-    formatter: (p) => `${p.name}: ${won(p.value)} (${p.percent}%)`,
-  },
-  series: [{
-    type: 'pie',
-    radius: ['68%', '96%'],
-    avoidLabelOverlap: false,
-    label: { show: false },
-    labelLine: { show: false },
-    data: menuAmounts.value.map((m) => ({ name: m.name, value: m.amount, itemStyle: { color: m.color } })),
-  }],
-}))
-
-// ── 결제 건수 (수단별 + 할인/쿠폰 사용량) ──
-const PAY_COLORS = brandPalette(5) // 기본 컬러→블랙
-const PAY_METHODS = [
-  { name: '카드', count: 1840, color: PAY_COLORS[0] },
-  { name: '현금', count: 520, color: PAY_COLORS[1] },
-  { name: '상품권', count: 180, color: PAY_COLORS[2] },
+const salesPeriods = [
+  { id: 'day', label: '일' },
+  { id: 'week', label: '주' },
+  { id: 'month', label: '월' },
 ]
-const PROMO = [
-  { name: '할인 적용', count: 430, color: PAY_COLORS[3] },
-  { name: '쿠폰 사용', count: 260, color: PAY_COLORS[4] },
-]
-const payItems = [...PAY_METHODS, ...PROMO]
-const paymentTotal = PAY_METHODS.reduce((a, i) => a + i.count, 0)
+const salesPeriod = ref('day')
+const salesCur = computed(() => SALES[salesPeriod.value])
+const salesSum = computed(() => salesCur.value.data.reduce((a, b) => a + b, 0))
 
-// 가로 막대 — 카드/현금/상품권 + 할인/쿠폰 건수
-const payOption = computed(() => {
-  const items = [...payItems].reverse() // 위에서부터 카드 순으로 표시
+const salesTrendOption = computed(() => {
+  const d = salesCur.value
+  const max = Math.max(...d.data)
   return {
     textStyle: { fontWeight: CHART_FW },
-    grid: { left: 4, right: 52, top: 6, bottom: 2, containLabel: true },
-    tooltip: { trigger: 'item', textStyle: { fontWeight: CHART_FW }, formatter: (p) => `${p.name}: ${p.value.toLocaleString()}건` },
-    xAxis: { type: 'value', axisLabel: { show: false }, axisLine: { show: false }, axisTick: { show: false }, splitLine: { lineStyle: { color: GRID } } },
-    yAxis: {
+    grid: { left: 4, right: 10, top: 16, bottom: 6, containLabel: true },
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: { type: 'shadow' },
+      textStyle: { fontWeight: CHART_FW },
+      formatter: (p) => `${p[0].axisValue}${d.unit}  ${won(p[0].value)}`,
+    },
+    xAxis: {
       type: 'category',
-      data: items.map((i) => i.name),
-      axisLine: { show: false },
+      data: d.labels,
       axisTick: { show: false },
-      axisLabel: { color: '#d7d7dc', fontSize: 12, fontWeight: CHART_FW },
+      axisLine: { lineStyle: { color: CC.value.grid } },
+      axisLabel: { color: CC.value.muted, fontSize: 11, fontWeight: CHART_FW },
+    },
+    yAxis: {
+      type: 'value',
+      axisLabel: { color: CC.value.muted, fontSize: 10, fontWeight: CHART_FW, formatter: (v) => wonTick(v) },
+      splitLine: { lineStyle: { color: CC.value.grid } },
     },
     series: [{
       type: 'bar',
-      barWidth: 14,
-      data: items.map((i) => ({ value: i.count, itemStyle: { color: i.color, borderRadius: [0, 6, 6, 0] } })),
-      label: { show: true, position: 'right', formatter: (p) => p.value.toLocaleString() + '건', color: MUTED, fontSize: 11, fontWeight: CHART_FW },
+      barMaxWidth: 30,
+      // 피크타임 막대는 강조색, 나머지는 흐린색
+      data: d.data.map((v) => ({
+        value: v,
+        itemStyle: { borderRadius: [5, 5, 0, 0], color: v >= max * 0.66 ? CC.value.accent : mixHex(CC.value.accent, CC.value.dim, 0.7) },
+      })),
     }],
   }
 })
+
+// 도넛 공통 옵션
+function donutOption(items) {
+  return {
+    textStyle: { fontWeight: CHART_FW },
+    tooltip: { trigger: 'item', textStyle: { fontWeight: CHART_FW }, formatter: (p) => `${p.name}: ${won(p.value)} (${p.percent}%)` },
+    series: [{
+      type: 'pie',
+      radius: ['60%', '92%'],
+      avoidLabelOverlap: false,
+      label: { show: false },
+      labelLine: { show: false },
+      data: items.map((it, i) => ({ name: it.name, value: it.value, itemStyle: { color: menuColors.value[i] } })),
+    }],
+  }
+}
+
+// 결제수단 비중
+const payMethods = [
+  { name: '카드', value: 248 },
+  { name: '간편결제', value: 92 },
+  { name: '현금', value: 42 },
+]
+const payTotal = computed(() => payMethods.reduce((a, p) => a + p.value, 0))
+const payDonutOption = computed(() => donutOption(payMethods))
+
+// ── 3. 메뉴 분석 ──
+const bestsellers = [
+  { name: '시그니처 버거', qty: 86, rev: 129 },
+  { name: '트러플 크림 파스타', qty: 64, rev: 115 },
+  { name: '마르게리타 피자', qty: 58, rev: 87 },
+  { name: '수제 감자튀김', qty: 73, rev: 44 },
+  { name: '아메리카노', qty: 91, rev: 36 },
+]
+const bestMax = Math.max(...bestsellers.map((m) => m.rev))
+
+const categories = [
+  { name: '메인', value: 210 },
+  { name: '사이드', value: 78 },
+  { name: '음료', value: 64 },
+  { name: '디저트', value: 30 },
+]
+const categoryTotal = computed(() => categories.reduce((a, c) => a + c.value, 0))
+
+// ── 4. 주문·채널 ──
+const channels = [
+  { name: '홀', value: 196 },
+  { name: '포장', value: 92 },
+  { name: '배달', value: 94 },
+]
+const channelTotal = computed(() => channels.reduce((a, c) => a + c.value, 0))
+const channelDonutOption = computed(() => donutOption(channels))
+
+const orderStatus = [
+  { name: '접수', count: 6, icon: 'inbox', tone: 'info' },
+  { name: '조리중', count: 9, icon: 'skillet', tone: 'warn' },
+  { name: '완료', count: 127, icon: 'check_circle', tone: 'ok' },
+]
+
+// ── 5. 보조 정보 ──
+const newRet = { newPct: 38, retPct: 62, newCnt: 54, retCnt: 88 }
+
+const review = {
+  avg: 4.6,
+  count: 1284,
+  recent: [
+    { name: '김○○', stars: 5, text: '버거가 정말 맛있어요. 재방문 의사 100%!' },
+    { name: '이○○', stars: 4, text: '분위기 좋고 직원분들 친절합니다. 다만 조금 짠 편.' },
+    { name: '박○○', stars: 5, text: '트러플 파스타 강추! 웨이팅 있을 만해요.' },
+  ],
+}
+function starList(avg) {
+  return Array.from({ length: 5 }, (_, i) => (avg >= i + 1 ? 'full' : avg >= i + 0.5 ? 'half' : 'empty'))
+}
+
+const stockAlerts = [
+  { name: '한우 등심', qty: '2인분', level: '부족', tone: 'warn' },
+  { name: '생맥주 1000cc', qty: '5잔', level: '소진 임박', tone: 'warn' },
+  { name: '트러플 오일', qty: '0', level: '품절', tone: 'danger' },
+  { name: '딸기 (디저트용)', qty: '1팩', level: '부족', tone: 'warn' },
+]
 </script>
