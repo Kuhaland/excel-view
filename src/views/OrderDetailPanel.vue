@@ -1,0 +1,181 @@
+<template>
+  <aside class="ord-detail card">
+    <div class="od-top">
+      <div>
+        <div class="od-no">주문 #{{ order.id }}</div>
+        <div class="od-sub">
+          <span class="ord-badge" :class="statusClass(order.status)">{{ statusLabel(order.status) }}</span>
+          <span class="od-date">{{ order.date }} · {{ order.time }}</span>
+        </div>
+      </div>
+      <button class="od-x" aria-label="닫기" @click="$emit('close')">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+
+    <div class="od-cust">
+      <span class="avatar-lg" :style="{ background: order.color }">{{ initial(order.name) }}</span>
+      <div class="od-name">{{ order.name }}</div>
+      <div class="od-contacts">
+        <button class="od-cc"><span class="material-symbols-outlined">mail</span></button>
+        <button class="od-cc"><span class="material-symbols-outlined">call</span></button>
+        <button class="od-cc"><span class="material-symbols-outlined">chat</span></button>
+      </div>
+    </div>
+
+    <div class="od-items-title">주문 상품</div>
+    <ul class="od-items">
+      <li v-for="(it, i) in order.items" :key="i">
+        <span class="od-thumb material-symbols-outlined">{{ it.icon }}</span>
+        <div class="od-it-info">
+          <div class="od-it-name">{{ it.name }}</div>
+          <div class="od-it-price">{{ won(it.price) }}</div>
+        </div>
+      </li>
+    </ul>
+
+    <div class="od-total">
+      <span>합계</span>
+      <span class="od-total-val">{{ won(order.total) }}</span>
+    </div>
+
+    <div class="od-actions">
+      <button class="btn-track">
+        <span class="material-symbols-outlined">my_location</span> 배송 추적
+      </button>
+      <button class="btn-refund">
+        <span class="material-symbols-outlined">undo</span> 환불
+      </button>
+    </div>
+  </aside>
+</template>
+
+<script setup>
+defineProps({
+  order: { type: Object, required: true },
+})
+defineEmits(['close'])
+
+function won(n) {
+  return '₩' + n.toLocaleString('ko-KR')
+}
+function initial(name) {
+  return name.charAt(0).toUpperCase()
+}
+function statusClass(s) {
+  return { Paid: 's-paid', Delivered: 's-delivered', Completed: 's-completed' }[s]
+}
+function statusLabel(s) {
+  return { Paid: '결제완료', Delivered: '배송', Completed: '완료' }[s]
+}
+</script>
+
+<style scoped>
+.ord-detail {
+  width: 320px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  overflow-y: auto;
+}
+.od-top {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
+}
+.od-no { font-size: 18px; font-weight: 800; color: var(--text); }
+.od-sub { display: flex; align-items: center; gap: 8px; margin-top: 7px; }
+.od-date { font-size: 12.5px; color: var(--muted); }
+.od-x {
+  display: inline-flex; width: 30px; height: 30px;
+  align-items: center; justify-content: center;
+  border: 0; border-radius: 9px; background: transparent;
+  color: var(--muted); cursor: pointer;
+}
+.od-x:hover { background: rgba(0, 0, 0, 0.05); color: var(--text); }
+
+.od-cust {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 10px; padding: 20px 0 18px;
+  border-bottom: 1px solid var(--line);
+}
+.avatar-lg {
+  width: 72px; height: 72px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 28px; font-weight: 700; color: #3a2c00;
+}
+.od-name { font-size: 15px; font-weight: 700; color: var(--text); }
+.od-contacts { display: flex; gap: 10px; }
+.od-cc {
+  display: inline-flex; width: 40px; height: 40px;
+  align-items: center; justify-content: center;
+  border: 1px solid var(--line); border-radius: 50%;
+  background: var(--card); color: var(--text); cursor: pointer;
+  transition: background 0.12s;
+}
+.od-cc:hover { background: rgba(0, 0, 0, 0.04); }
+
+.od-items-title {
+  font-size: 13px; font-weight: 700; color: var(--text);
+  margin: 16px 0 4px;
+}
+.od-items {
+  list-style: none; margin: 0; padding: 0;
+  flex: 1; min-height: 0; overflow-y: auto;
+}
+.od-items li {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 0;
+}
+.od-thumb {
+  flex-shrink: 0;
+  width: 42px; height: 42px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 10px;
+  background: #f1f0ec;
+  color: #6b6d75;
+  font-size: 22px;
+}
+.od-it-info { min-width: 0; }
+.od-it-name {
+  font-size: 13px; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;
+}
+.od-it-price { font-size: 13px; font-weight: 700; color: var(--text); margin-top: 1px; }
+
+.od-total {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+  font-size: 14px; color: var(--muted);
+}
+.od-total-val { font-size: 18px; font-weight: 800; color: var(--text); }
+
+.od-actions { display: flex; gap: 10px; }
+.btn-track, .btn-refund {
+  flex: 1;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  border: 0; border-radius: 12px; padding: 12px;
+  font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
+  transition: filter 0.12s;
+}
+.btn-track .material-symbols-outlined,
+.btn-refund .material-symbols-outlined { font-size: 18px; }
+.btn-track { background: #1b1b1f; color: #fff; }
+.btn-refund { background: #f2e24e; color: #1b1b1f; }
+.btn-track:hover { filter: brightness(1.2); }
+.btn-refund:hover { filter: brightness(0.96); }
+
+/* 상태 배지 */
+.ord-badge {
+  display: inline-block;
+  font-size: 12px; font-weight: 700;
+  padding: 4px 11px; border-radius: 999px;
+}
+.s-paid { background: #f0efe8; color: #6b6d75; }
+.s-delivered { background: rgba(240, 150, 90, 0.18); color: #c9692e; }
+.s-completed { background: rgba(34, 197, 94, 0.16); color: #16a34a; }
+
+@media (max-width: 1000px) {
+  .ord-detail { width: auto; }
+}
+</style>

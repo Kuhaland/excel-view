@@ -22,22 +22,50 @@
         />
       </div>
 
-      <nav class="home-pills" @mouseleave="hoverIndex = null">
-        <span class="pill-indicator" :style="indicatorStyle"></span>
-        <button
-          v-for="(p, i) in pills"
-          :key="p.id"
-          :ref="(el) => setPill(el, i)"
-          type="button"
-          class="hpill"
-          :class="{ on: i === indicatorTarget }"
-          @mouseenter="hoverIndex = i"
-          @click="onPill(p)"
-        >
-          <span class="material-symbols-outlined">{{ p.icon }}</span>
-          <span class="hpill-text">{{ p.label }}</span>
-        </button>
-      </nav>
+      <!-- 1차 메뉴(pills) + hover 시 하단 하위메뉴 -->
+      <div class="home-menunav" @mouseleave="scheduleClose">
+        <nav class="home-pills">
+          <span class="pill-indicator" :style="indicatorStyle"></span>
+          <button
+            v-for="(p, i) in pills"
+            :key="p.id"
+            :ref="(el) => setPill(el, i)"
+            type="button"
+            class="hpill"
+            :class="{ on: i === hoverIndex }"
+            :aria-label="p.title"
+            @mouseenter="openSub(i)"
+          >
+            <span class="material-symbols-outlined">{{ p.icon }}</span>
+          </button>
+        </nav>
+
+        <Transition name="submenu">
+          <div
+            v-if="hoverSection && hoverSection.items.length"
+            class="home-submenu"
+            :style="{ left: submenuLeft + 'px' }"
+            @mouseenter="keepSub"
+            @mouseleave="scheduleClose"
+          >
+            <!-- 슬라이드 상단: 메뉴(섹션)명 명시 (클릭 이동 없음) -->
+            <div class="hsub-head">
+              <span class="material-symbols-outlined">{{ hoverSection.icon }}</span>
+              {{ hoverSection.title }}
+            </div>
+            <button
+              v-for="it in hoverSection.items"
+              :key="it.id"
+              type="button"
+              class="hsub"
+              @click="go(itemTarget(it))"
+            >
+              <span class="material-symbols-outlined">{{ it.icon }}</span>
+              <span class="hsub-label">{{ it.label }}</span>
+            </button>
+          </div>
+        </Transition>
+      </div>
 
       <div class="home-right">
         <ToggleSwitch
@@ -55,9 +83,10 @@
           <span class="material-symbols-outlined">{{ m.icon }}</span>
           <span class="hicon-tip">{{ m.label }}</span>
         </button>
-        <button class="hicon">
-          <span class="material-symbols-outlined">notifications</span>
-          <span class="hicon-tip">알림</span>
+        <NotificationBell trigger-class="hicon" @navigate="$emit('navigate', $event)" />
+        <button class="hicon" @click="$emit('help')">
+          <span class="material-symbols-outlined">help</span>
+          <span class="hicon-tip">도움말</span>
         </button>
         <div class="profile">
           <div class="avatar">{{ avatarInitial }}</div>
@@ -306,6 +335,8 @@ import { GridComponent, TooltipComponent } from 'echarts/components'
 import VChart from 'vue-echarts'
 import logo from '../assets/images/logo.png'
 import ToggleSwitch from '../components/ToggleSwitch.vue'
+import NotificationBell from '../components/NotificationBell.vue'
+import { MENU_TREE } from '../menus.js'
 
 use([CanvasRenderer, BarChart, LineChart, PieChart, GridComponent, TooltipComponent])
 
@@ -315,7 +346,7 @@ const props = defineProps({
   userEmail: { type: String, default: '' },
   avatarInitial: { type: String, default: '' },
 })
-const emit = defineEmits(['navigate', 'open-sheet', 'file'])
+const emit = defineEmits(['navigate', 'open-sheet', 'file', 'help'])
 
 // ── 컬러 모드 (다크/라이트) ──
 const STORE_KEY = 'dash-theme'
@@ -330,38 +361,64 @@ watch(isDark, (v) => {
 // 로고 X축 회전 애니메이션
 const logoSpin = ref(false)
 
-// ── 상단 메뉴 + 슬라이딩 인디케이터 ──
-const RIGHT_IDS = ['help', 'settings']
-const rightMenus = computed(() =>
-  RIGHT_IDS.map((id) => props.menus.find((m) => m.id === id)).filter(Boolean)
-)
-const pills = computed(() => props.menus.filter((m) => !RIGHT_IDS.includes(m.id)))
+// ── 상단 메뉴(1차=섹션 pills) + hover 시 하단 하위메뉴 ──
+// 메인 메뉴와 LNB(사이드바)는 동일한 menus.js 트리(MENU_TREE) 사용
+const rightMenus = computed(() => [])
+const pills = MENU_TREE
 const hoverIndex = ref(null)
-const indicatorTarget = computed(() => hoverIndex.value)
 const pillEls = ref([])
 const indicatorStyle = ref({ opacity: 0 })
+const submenuLeft = ref(0)
+let closeTimer = null
+
+const hoverSection = computed(() => (hoverIndex.value != null ? MENU_TREE[hoverIndex.value] : null))
 
 function setPill(el, i) {
   if (el) pillEls.value[i] = el
 }
 function moveIndicator() {
-  const idx = hoverIndex.value
-  if (idx === null) {
+  const i = hoverIndex.value
+  if (i == null) {
     indicatorStyle.value = { ...indicatorStyle.value, opacity: 0 }
     return
   }
-  const el = pillEls.value[idx]
+  const el = pillEls.value[i]
   if (!el) return
   indicatorStyle.value = {
     transform: `translateX(${el.offsetLeft}px)`,
     width: `${el.offsetWidth}px`,
     opacity: 1,
   }
+  submenuLeft.value = el.offsetLeft
 }
 watch(hoverIndex, () => moveIndicator())
+
+// hover 의도(약간의 지연)로 pill ↔ 드롭다운 사이 이동을 매끄럽게
+function openSub(i) {
+  clearTimeout(closeTimer)
+  hoverIndex.value = i
+}
+function keepSub() {
+  clearTimeout(closeTimer)
+}
+function scheduleClose() {
+  closeTimer = setTimeout(() => { hoverIndex.value = null }, 150)
+}
+
+function itemTarget(it) {
+  return it.children ? it.children[0].id : it.id
+}
+function go(id) {
+  clearTimeout(closeTimer)
+  hoverIndex.value = null
+  emit('navigate', id)
+}
+
 onMounted(() => window.addEventListener('resize', moveIndicator))
-onBeforeUnmount(() => window.removeEventListener('resize', moveIndicator))
-function onPill(p) { emit('navigate', p.id) }
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', moveIndicator)
+  clearTimeout(closeTimer)
+})
 
 // ── 오늘 날짜 라벨 ──
 const WD = ['일', '월', '화', '수', '목', '금', '토']

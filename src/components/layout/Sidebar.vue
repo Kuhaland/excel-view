@@ -15,16 +15,16 @@
       </button>
     </div>
 
-    <!-- 메뉴 그룹 -->
+    <!-- 메뉴 트리 (섹션 → 항목 → 하위) -->
     <nav class="menu-wrap">
-      <template v-for="(group, gi) in groups" :key="gi">
-        <div v-if="gi > 0" class="menu-divider"></div>
+      <div v-for="group in groups" :key="group.id" class="menu-section">
+        <div class="menu-title">{{ group.title }}</div>
         <SidebarMenu
           :items="group.items"
           :active="activeMenu"
           @select="$emit('update:activeMenu', $event)"
         />
-      </template>
+      </div>
     </nav>
 
     <!-- 하단: 로그아웃 -->
