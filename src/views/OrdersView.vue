@@ -3,32 +3,10 @@
     <!-- 필터/정렬 툴바 -->
     <div class="ord-toolbar">
       <div class="ord-filters">
-        <label class="ord-select">
-          <select v-model="statusFilter">
-            <option value="all">전체 상태</option>
-            <option value="Paid">결제완료</option>
-            <option value="Delivered">배송</option>
-            <option value="Completed">완료</option>
-          </select>
-          <span class="material-symbols-outlined">expand_more</span>
-        </label>
-        <label class="ord-select">
-          <select v-model="range">
-            <option value="all">전체 금액</option>
-            <option value="lo">~50만원</option>
-            <option value="mid">50만~150만원</option>
-            <option value="hi">150만원~</option>
-          </select>
-          <span class="material-symbols-outlined">expand_more</span>
-        </label>
+        <Select v-model="statusFilter" :options="statusOptions" :style="{ width: '150px' }" />
+        <Select v-model="range" :options="rangeOptions" :style="{ width: '170px' }" />
       </div>
-      <label class="ord-select">
-        <select v-model="sort">
-          <option value="date">날짜순</option>
-          <option value="total">금액순</option>
-        </select>
-        <span class="material-symbols-outlined">expand_more</span>
-      </label>
+      <Select v-model="sort" :options="sortOptions" :style="{ width: '130px' }" />
     </div>
 
     <div class="ord-grid">
@@ -36,9 +14,11 @@
       <div class="ord-table card">
         <div class="ord-head ord-row">
           <span class="oc-check">
-            <button class="checkbox" :class="{ on: allChecked }" @click="toggleAll" aria-label="전체 선택">
-              <span v-if="allChecked" class="material-symbols-outlined">check</span>
-            </button>
+            <Checkbox
+              :model-value="allChecked"
+              :indeterminate="someChecked && !allChecked"
+              @change="toggleAll"
+            />
           </span>
           <span class="oc-id">주문번호</span>
           <span class="oc-cust">고객</span>
@@ -57,9 +37,7 @@
             @click="activeId = o.id"
           >
             <span class="oc-check" @click.stop>
-              <button class="checkbox" :class="{ on: checked.has(o.id) }" @click="toggleOne(o.id)" :aria-label="`주문 ${o.id} 선택`">
-                <span v-if="checked.has(o.id)" class="material-symbols-outlined">check</span>
-              </button>
+              <Checkbox v-model="selectedIds" :value="o.id" />
             </span>
             <span class="oc-id">#{{ o.id }}</span>
             <span class="oc-cust">
@@ -91,6 +69,26 @@
 <script setup>
 import { ref, computed } from 'vue'
 import OrderDetailPanel from './OrderDetailPanel.vue'
+import Checkbox from '../components/Checkbox.vue'
+import Select from '../components/Select.vue'
+
+// 필터/정렬 옵션 (Select 컴포넌트용)
+const statusOptions = [
+  { label: '전체 상태', value: 'all' },
+  { label: '결제완료', value: 'Paid' },
+  { label: '배송', value: 'Delivered' },
+  { label: '완료', value: 'Completed' },
+]
+const rangeOptions = [
+  { label: '전체 금액', value: 'all' },
+  { label: '~50만원', value: 'lo' },
+  { label: '50만~150만원', value: 'mid' },
+  { label: '150만원~', value: 'hi' },
+]
+const sortOptions = [
+  { label: '날짜순', value: 'date' },
+  { label: '금액순', value: 'total' },
+]
 
 function won(n) {
   return '₩' + n.toLocaleString('ko-KR')
@@ -150,7 +148,7 @@ const statusFilter = ref('all')
 const range = ref('all')
 const sort = ref('date')
 const activeId = ref(null) // row 클릭 시 상세 패널 활성
-const checked = ref(new Set(['602992', '418135', '730345', '045321']))
+const selectedIds = ref(['602992', '418135', '730345', '045321']) // Checkbox 배열 v-model
 
 const viewOrders = computed(() => {
   let list = orders
@@ -164,17 +162,16 @@ const viewOrders = computed(() => {
 
 const detail = computed(() => orders.find((o) => o.id === activeId.value) || null)
 
-const allChecked = computed(() => viewOrders.value.length > 0 && viewOrders.value.every((o) => checked.value.has(o.id)))
+// 전체 선택(현재 보이는 목록 기준) + indeterminate
+const viewIds = computed(() => viewOrders.value.map((o) => o.id))
+const allChecked = computed(() => viewIds.value.length > 0 && viewIds.value.every((id) => selectedIds.value.includes(id)))
+const someChecked = computed(() => viewIds.value.some((id) => selectedIds.value.includes(id)))
 function toggleAll() {
-  const next = new Set(checked.value)
-  if (allChecked.value) viewOrders.value.forEach((o) => next.delete(o.id))
-  else viewOrders.value.forEach((o) => next.add(o.id))
-  checked.value = next
-}
-function toggleOne(id) {
-  const next = new Set(checked.value)
-  next.has(id) ? next.delete(id) : next.add(id)
-  checked.value = next
+  if (allChecked.value) {
+    selectedIds.value = selectedIds.value.filter((id) => !viewIds.value.includes(id))
+  } else {
+    selectedIds.value = [...new Set([...selectedIds.value, ...viewIds.value])]
+  }
 }
 </script>
 
@@ -195,30 +192,6 @@ function toggleOne(id) {
   margin-bottom: 16px;
 }
 .ord-filters { display: flex; gap: 10px; }
-.ord-select {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-}
-.ord-select select {
-  appearance: none;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: var(--card);
-  color: var(--text);
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  padding: 9px 32px 9px 14px;
-  cursor: pointer;
-}
-.ord-select .material-symbols-outlined {
-  position: absolute;
-  right: 10px;
-  font-size: 18px;
-  color: var(--muted);
-  pointer-events: none;
-}
 
 /* 레이아웃 */
 .ord-grid {
@@ -267,25 +240,8 @@ function toggleOne(id) {
 .ord-data:hover { background: rgba(0, 0, 0, 0.03); }
 .ord-data.active { background: rgba(242, 226, 78, 0.16); }
 
-/* 체크박스 */
-.checkbox {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  border: 1.5px solid #cfd0d6;
-  border-radius: 6px;
-  background: transparent;
-  color: #1b1b1f;
-  cursor: pointer;
-}
-.checkbox.on {
-  background: #1b1b1f;
-  border-color: #1b1b1f;
-  color: #fff;
-}
-.checkbox .material-symbols-outlined { font-size: 15px; font-weight: 700; }
+/* 체크박스 셀 정렬 (체크박스는 Checkbox 컴포넌트) */
+.oc-check :deep(.base-checkbox) { padding: 0; }
 
 /* 셀 */
 .oc-cust { display: flex; align-items: center; gap: 9px; min-width: 0; }

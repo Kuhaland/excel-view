@@ -106,9 +106,7 @@
           <span class="live-dot"></span> 영업 중 · {{ todayLabel }}
         </p>
       </div>
-      <button class="home-share" @click="$emit('navigate', 'viewer')">
-        <span class="material-symbols-outlined">ios_share</span> 리포트
-      </button>
+      <Button variant="primary" icon="ios_share" @click="$emit('navigate', 'sys-upload')">리포트</Button>
     </div>
 
     <div class="dash">
@@ -336,6 +334,7 @@ import VChart from 'vue-echarts'
 import logo from '../assets/images/logo.png'
 import ToggleSwitch from '../components/ToggleSwitch.vue'
 import NotificationBell from '../components/NotificationBell.vue'
+import Button from '../components/Button.vue'
 import { MENU_TREE } from '../menus.js'
 
 use([CanvasRenderer, BarChart, LineChart, PieChart, GridComponent, TooltipComponent])

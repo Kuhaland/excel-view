@@ -40,17 +40,15 @@
     </div>
 
     <div class="od-actions">
-      <button class="btn-track">
-        <span class="material-symbols-outlined">my_location</span> 배송 추적
-      </button>
-      <button class="btn-refund">
-        <span class="material-symbols-outlined">undo</span> 환불
-      </button>
+      <Button variant="dark" icon="my_location">배송 추적</Button>
+      <Button variant="primary" icon="undo">환불</Button>
     </div>
   </aside>
 </template>
 
 <script setup>
+import Button from '../components/Button.vue'
+
 defineProps({
   order: { type: Object, required: true },
 })
@@ -151,19 +149,7 @@ function statusLabel(s) {
 .od-total-val { font-size: 18px; font-weight: 800; color: var(--text); }
 
 .od-actions { display: flex; gap: 10px; }
-.btn-track, .btn-refund {
-  flex: 1;
-  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-  border: 0; border-radius: 12px; padding: 12px;
-  font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
-  transition: filter 0.12s;
-}
-.btn-track .material-symbols-outlined,
-.btn-refund .material-symbols-outlined { font-size: 18px; }
-.btn-track { background: #1b1b1f; color: #fff; }
-.btn-refund { background: #f2e24e; color: #1b1b1f; }
-.btn-track:hover { filter: brightness(1.2); }
-.btn-refund:hover { filter: brightness(0.96); }
+.od-actions > * { flex: 1; } /* Button 컴포넌트 균등 분배 */
 
 /* 상태 배지 */
 .ord-badge {

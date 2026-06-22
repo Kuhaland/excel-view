@@ -80,10 +80,8 @@
 
             <div class="filterbar-right">
               <span class="chip" v-if="activeSheet">{{ activeSheet.rows.length.toLocaleString() }}행</span>
-              <Checkbox v-model="headerRow">머리글</Checkbox>
-              <button class="btn-file" @click="pickFile">
-                <span class="material-symbols-outlined">folder_open</span> 다른 파일 선택
-              </button>
+              <Checkbox v-model="headerRow" label="머리글" />
+              <Button variant="dark" icon="folder_open" @click="pickFile">다른 파일 선택</Button>
             </div>
           </div>
 
@@ -143,6 +141,7 @@ import { parseWorkbook } from './excel.js'
 import { MENUS, SIDEBAR_GROUPS, VIEWER_ID, findMenu } from './menus.js'
 import FileDrop from './components/FileDrop.vue'
 import Checkbox from './components/Checkbox.vue'
+import Button from './components/Button.vue'
 import Sidebar from './components/layout/Sidebar.vue'
 import Dashboard from './views/Dashboard.vue'
 import OrdersView from './views/OrdersView.vue'
