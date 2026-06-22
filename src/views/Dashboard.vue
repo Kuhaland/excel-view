@@ -106,7 +106,11 @@
           <span class="live-dot"></span> 영업 중 · {{ todayLabel }}
         </p>
       </div>
-      <Button variant="primary" icon="ios_share" @click="$emit('navigate', 'sys-upload')">리포트</Button>
+      <div class="home-title-actions">
+        <div class="partner-logo" title="샤브79">
+          <img class="partner-logo-img" :src="partnerLogo" alt="partner logo" />
+        </div>
+      </div>
     </div>
 
     <div class="dash">
@@ -332,6 +336,7 @@ import { BarChart, LineChart, PieChart } from 'echarts/charts'
 import { GridComponent, TooltipComponent } from 'echarts/components'
 import VChart from 'vue-echarts'
 import logo from '../assets/images/logo.png'
+import partnerLogo from '../assets/images/partner-logo.png'
 import ToggleSwitch from '../components/ToggleSwitch.vue'
 import NotificationBell from '../components/NotificationBell.vue'
 import Button from '../components/Button.vue'

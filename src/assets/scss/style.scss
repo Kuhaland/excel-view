@@ -1739,6 +1739,34 @@ table.grid {
   margin: 0;
 }
 
+// 타이틀 행 우측 버튼 영역
+.home-title-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 100%;
+}
+
+// 파트너 로고: 흰 바탕 + 라운딩 박스
+.partner-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 0 16px;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+.partner-logo-img {
+  height: 26px;
+  width: auto;
+  max-width: 120px;
+  object-fit: contain;
+  display: block;
+}
+
 .home-share {
   display: inline-flex;
   align-items: center;
