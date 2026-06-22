@@ -14,7 +14,7 @@
     <!-- 그 외 화면: 사이드바 셸 -->
     <!-- 그 외 화면: 사이드바 셸 (홈에서 진입 시에만 페이드인) -->
     <Transition name="fade">
-      <div v-if="activeMenu !== 'home'" class="app">
+      <div v-if="activeMenu !== 'home'" class="app" :class="{ 'nav-open': navOpen }">
       <Sidebar
         :groups="sidebarGroups"
         v-model:active-menu="activeMenu"
@@ -22,9 +22,15 @@
         @close="reset"
       />
 
+      <!-- 모바일: 사이드바 드로어 백드롭 -->
+      <div class="nav-backdrop" @click="navOpen = false"></div>
+
       <!-- 메인 영역 -->
       <main class="main">
         <header class="topbar">
+          <button type="button" class="nav-toggle" aria-label="메뉴 열기" @click="navOpen = true">
+            <span class="material-symbols-outlined">menu</span>
+          </button>
           <h1 class="page-title">{{ pageTitle }}</h1>
           <div class="topbar-actions">
             <NotificationBell trigger-class="icon-btn" @navigate="activeMenu = $event" />
@@ -173,6 +179,7 @@ const rowSearch = ref('')
 const sheetFilter = ref('')
 const selectedCell = ref(null)
 const fileInput = ref(null)
+const navOpen = ref(false) // 모바일 사이드바 드로어 열림 상태
 
 const userEmail = 'leehx78@gmail.com'
 const userName = computed(() => userEmail.split('@')[0])
@@ -211,6 +218,7 @@ watch(active, () => {
 })
 
 watch(activeMenu, (id) => {
+  navOpen.value = false // 메뉴 이동 시 모바일 드로어 닫기
   const target = id === 'home' ? '#/' : `#/${id}`
   if (window.location.hash !== target) window.location.hash = target
 })

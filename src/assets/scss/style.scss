@@ -64,7 +64,7 @@ $muted: #8b8d96;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1em;
+  width: 1em; min-width: 1em;
   height: 1em;
   overflow: hidden;
 }
@@ -2972,4 +2972,229 @@ table.grid {
 .slide-panel-leave-to {
   transform: translateX(110%);
   opacity: 0;
+}
+
+// ════════════════════════════════════════════════════════════════════════
+//  반응형 — 태블릿 / 모바일 대응
+// ════════════════════════════════════════════════════════════════════════
+
+// 모바일 사이드바 드로어 토글 버튼 / 백드롭 — 기본(데스크탑)은 숨김
+.nav-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--card);
+  color: #5a5c64;
+  cursor: pointer;
+
+  .material-symbols-outlined {
+    font-size: 22px;
+  }
+
+  &:hover {
+    background: #f3f2ef;
+  }
+}
+.nav-backdrop {
+  display: none;
+}
+
+// ── 태블릿 (≤1024px) ──────────────────────────────────────────────────────
+@media (max-width: 1024px) {
+  .main {
+    padding: 18px 18px;
+    margin: 10px 10px 10px 0;
+  }
+  .topbar {
+    margin-bottom: 16px;
+  }
+  .page-title {
+    font-size: 22px;
+  }
+  .home {
+    padding: 16px 18px 24px;
+  }
+  .home-title {
+    font-size: 26px;
+  }
+  // 홈 상단 네비: 좁으면 줄바꿈 + 가운데 메뉴 정렬
+  .home-nav {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  // 대시보드 그리드
+  .kpi-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .dash-row.r-2-1,
+  .dash-row.r-1-1,
+  .dash-row.r-3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+// ── 모바일 (≤640px) ───────────────────────────────────────────────────────
+@media (max-width: 640px) {
+  // 사이드바 → 오프캔버스 드로어
+  .app {
+    position: relative;
+  }
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 60;
+    width: 270px;
+    margin: 0;
+    padding: 18px 14px;
+    transform: translateX(-100%);
+    transition: transform 0.26s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 0 44px rgba(0, 0, 0, 0.45);
+  }
+  .app.nav-open .sidebar {
+    transform: none;
+  }
+  // 모바일에서는 사이드바 접기 버튼 숨김(드로어로만 사용)
+  .sidebar .collapse-btn {
+    display: none;
+  }
+  .nav-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 55;
+    background: rgba(0, 0, 0, 0.45);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.26s ease;
+  }
+  .app.nav-open .nav-backdrop {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .nav-toggle {
+    display: inline-flex;
+  }
+
+  // 메인 영역: 풀폭 + 라운딩 제거
+  .main {
+    margin: 0;
+    border-radius: 0;
+    padding: 14px 14px;
+  }
+  .topbar {
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .page-title {
+    font-size: 19px;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .topbar-actions {
+    gap: 6px;
+  }
+  .profile {
+    padding-left: 4px;
+  }
+  // 모바일은 아바타만 표시(이름/메일 숨김)
+  .profile-meta {
+    display: none;
+  }
+
+  // ── 대시보드(홈) ──
+  .home {
+    padding: 12px 14px 22px;
+  }
+  .home-nav {
+    gap: 10px;
+    padding-bottom: 12px;
+  }
+  .home-brand {
+    flex: 0 0 auto;
+    .home-logo {
+      height: 38px;
+    }
+  }
+  // 메뉴 pills를 가운데 라인으로
+  .home-menunav {
+    order: 3;
+    flex: 1 0 100%;
+    display: flex;
+    justify-content: center;
+  }
+  .home-right {
+    gap: 6px;
+  }
+  // 프로필 텍스트 숨김(홈 우측)
+  .home-right .profile-meta {
+    display: none;
+  }
+  .home-title-row {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .home-title {
+    font-size: 22px;
+  }
+  .home-subtitle {
+    font-size: 12px;
+  }
+
+  // 대시보드 그리드 — KPI 2열, 차트 높이 축소
+  .dash {
+    gap: 12px;
+  }
+  .kpi-row {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .kpi-value {
+    font-size: 21px;
+  }
+  .chart-box {
+    height: 200px;
+  }
+  // 결제수단 도넛 카드: 세로 정렬
+  .donut-card {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .donut-box {
+    margin: 0 auto;
+    max-height: 170px;
+  }
+
+  // ── 엑셀 뷰어: 표 + 상세 패널 세로 정렬 ──
+  .viewer-grid {
+    flex-direction: column;
+  }
+  .detail {
+    width: auto;
+    max-height: 320px;
+  }
+  .filterbar,
+  .filterbar-right {
+    flex-wrap: wrap;
+  }
+  .filterbar .search {
+    flex: 1 0 100%;
+  }
+}
+
+// ── 초소형 (≤420px): KPI 1열 ──────────────────────────────────────────────
+@media (max-width: 420px) {
+  .kpi-row {
+    grid-template-columns: 1fr;
+  }
 }

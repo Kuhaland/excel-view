@@ -279,4 +279,21 @@ function toggleAll() {
 @media (max-width: 1000px) {
   .ord-grid { flex-direction: column; }
 }
+
+/* 모바일: 툴바 줄바꿈 + 테이블 핵심 컬럼만(고객·상태·금액) */
+@media (max-width: 640px) {
+  .ord-toolbar { flex-wrap: wrap; }
+  .ord-filters { flex-wrap: wrap; width: 100%; }
+
+  .ord-row {
+    grid-template-columns: 1fr auto auto;
+    gap: 10px;
+  }
+  .oc-check,
+  .oc-id,
+  .oc-date,
+  .oc-more { display: none; }
+
+  .ord-data { height: 52px; }
+}
 </style>

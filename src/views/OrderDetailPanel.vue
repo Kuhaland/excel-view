@@ -77,6 +77,13 @@ function statusLabel(s) {
   padding: 20px;
   overflow-y: auto;
 }
+
+/* 모바일/태블릿: 테이블 아래로 쌓일 때 전체 폭 사용 */
+@media (max-width: 1000px) {
+  .ord-detail {
+    width: auto;
+  }
+}
 .od-top {
   display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
 }
