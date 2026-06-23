@@ -78,10 +78,22 @@ function statusLabel(s) {
   overflow-y: auto;
 }
 
-/* 모바일/태블릿: 테이블 아래로 쌓일 때 전체 폭 사용 */
+/* 태블릿: 테이블 아래로 쌓일 때 전체 폭 사용 */
 @media (max-width: 1000px) {
   .ord-detail {
     width: auto;
+  }
+}
+/* 모바일: 화면 전체를 덮는 고정 오버레이 패널(우→좌 슬라이드 인) */
+@media (max-width: 640px) {
+  .ord-detail {
+    position: fixed;
+    inset: 0;
+    width: auto;
+    z-index: 200;
+    border-radius: 0;
+    max-height: none;
+    padding: 18px 16px calc(18px + env(safe-area-inset-bottom));
   }
 }
 .od-top {
@@ -89,7 +101,7 @@ function statusLabel(s) {
 }
 .od-no { font-size: 18px; font-weight: 800; color: var(--text); }
 .od-sub { display: flex; align-items: center; gap: 8px; margin-top: 7px; }
-.od-date { font-size: 12.5px; color: var(--muted); }
+.od-date { font-size: 13px; color: var(--muted); }
 .od-x {
   display: inline-flex; width: 30px; height: 30px;
   align-items: center; justify-content: center;
@@ -167,8 +179,4 @@ function statusLabel(s) {
 .s-paid { background: #f0efe8; color: #6b6d75; }
 .s-delivered { background: rgba(240, 150, 90, 0.18); color: #c9692e; }
 .s-completed { background: rgba(34, 197, 94, 0.16); color: #16a34a; }
-
-@media (max-width: 1000px) {
-  .ord-detail { width: auto; }
-}
 </style>

@@ -102,7 +102,7 @@ watch(pageCount, (pc) => {
   gap: 10px;
 }
 .pg-summary {
-  font-size: 12.5px;
+  font-size: 13px;
   color: var(--muted);
   font-variant-numeric: tabular-nums;
 }

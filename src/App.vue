@@ -115,6 +115,9 @@
         <!-- 주문 내역 (테이블 + 상세 패널) -->
         <OrdersView v-else-if="activeMenu === 'ord-list'" />
 
+        <!-- 수정 이력 로그 (테이블) -->
+        <ChangeLogView v-else-if="activeMenu === 'sys-log'" />
+
         <!-- 그 외 메뉴: 준비 중 -->
         <div v-else class="placeholder">
           <span class="material-symbols-outlined">{{ activeMenuIcon }}</span>
@@ -151,6 +154,7 @@ import Button from './components/ui/Button.vue'
 import Sidebar from './components/layout/Sidebar.vue'
 import Dashboard from './views/dashboard/Dashboard.vue'
 import OrdersView from './views/orders/OrdersView.vue'
+import ChangeLogView from './views/system/ChangeLogView.vue'
 import HelpContent from './views/help/HelpContent.vue'
 import Modal from './components/overlay/Modal.vue'
 import NotificationBell from './components/overlay/NotificationBell.vue'

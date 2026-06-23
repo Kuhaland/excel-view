@@ -208,7 +208,7 @@ export { ICONS, DEFAULT_ITEMS }
 }
 .noti-time {
   margin-top: 3px;
-  font-size: 11.5px;
+  font-size: 12px;
   color: #9a9aa2;
 }
 .noti-empty {

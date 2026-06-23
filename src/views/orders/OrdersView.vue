@@ -12,23 +12,24 @@
     <div class="ord-grid">
       <!-- 테이블 -->
       <div class="ord-table card">
-        <div class="ord-head ord-row">
-          <span class="oc-check">
-            <Checkbox
-              :model-value="allChecked"
-              :indeterminate="someChecked && !allChecked"
-              @change="toggleAll"
-            />
-          </span>
-          <span class="oc-id">주문번호</span>
-          <span class="oc-cust">고객</span>
-          <span class="oc-status">상태</span>
-          <span class="oc-total">금액</span>
-          <span class="oc-date">날짜</span>
-          <span class="oc-more"></span>
-        </div>
+        <!-- 헤더 + 본문을 한 컨테이너로 → 내용이 넓으면 가로 스크롤(헤더 sticky로 함께 스크롤) -->
+        <div ref="bodyRef" class="ord-scroll">
+          <div class="ord-head ord-row">
+            <span class="oc-check">
+              <Checkbox
+                :model-value="allChecked"
+                :indeterminate="someChecked && !allChecked"
+                @change="toggleAll"
+              />
+            </span>
+            <span class="oc-id">주문번호</span>
+            <span class="oc-cust">고객</span>
+            <span class="oc-status">상태</span>
+            <span class="oc-total">금액</span>
+            <span class="oc-date">날짜</span>
+            <span class="oc-more"></span>
+          </div>
 
-        <div ref="bodyRef" class="ord-body">
           <div
             v-for="o in pagedOrders"
             :key="o.id"
@@ -202,7 +203,7 @@ const viewOrders = computed(() => {
   return list
 })
 
-// 페이징 — 페이지당 행 수는 ord-body 높이에 맞춰 동적 계산
+// 페이징 — 페이지당 행 수는 스크롤 영역(헤더 제외) 높이에 맞춰 동적 계산
 const ROW_H = 56 // .ord-data 행 높이(px)
 const bodyRef = ref(null)
 const page = ref(1)
@@ -212,12 +213,13 @@ const pagedOrders = computed(() => {
   return viewOrders.value.slice(start, start + pageSize.value)
 })
 
-// ord-body 가용 높이 ÷ 행 높이 = 한 페이지에 들어갈 행 수
+// (스크롤 영역 높이 - 헤더) ÷ 행 높이 = 한 페이지에 들어갈 행 수
 function recalcPageSize() {
   const el = bodyRef.value
   if (!el) return
+  const headH = el.querySelector('.ord-head')?.offsetHeight || 40
   const rowH = el.querySelector('.ord-data')?.offsetHeight || ROW_H
-  const fit = Math.floor(el.clientHeight / rowH)
+  const fit = Math.floor((el.clientHeight - headH) / rowH)
   pageSize.value = Math.max(1, fit)
 }
 
@@ -277,6 +279,7 @@ function toggleAll() {
 .ord-table {
   flex: 1;
   min-width: 0;
+  min-height: 0; /* 컬럼 플렉스(모바일)에서 내부 스크롤이 정상 동작하도록 */
   display: flex;
   flex-direction: column;
   padding: 6px 6px 6px;
@@ -284,22 +287,28 @@ function toggleAll() {
 }
 .ord-row {
   display: grid;
-  grid-template-columns: 40px 96px 1.4fr 110px 120px 80px 40px;
+  grid-template-columns: 40px 96px minmax(180px, 1.4fr) 110px 120px 80px 40px;
   align-items: center;
   gap: 8px;
   padding: 0 10px;
+  min-width: 720px; /* 이보다 좁아지면 가로 스크롤 */
 }
 .ord-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
   height: 40px;
   font-size: 12px;
   font-weight: 600;
   color: var(--muted);
+  background: var(--card);
   border-bottom: 1px solid var(--line);
 }
-.ord-body {
+/* 헤더 + 본문 단일 스크롤 영역 — 세로/가로 모두 스크롤 */
+.ord-scroll {
   flex: 1;
   min-height: 0;
-  overflow-y: auto;
+  overflow: auto;
 }
 /* 페이지네이션 푸터 — 카드 하단 고정(본문만 스크롤) */
 .ord-foot {
@@ -310,7 +319,7 @@ function toggleAll() {
 .ord-data {
   height: 56px;
   border-radius: 12px;
-  font-size: 13.5px;
+  font-size: 14px;
   color: var(--text);
   cursor: pointer;
   transition: background 0.12s;
@@ -364,6 +373,7 @@ function toggleAll() {
   .ord-row {
     grid-template-columns: 1fr auto auto;
     gap: 10px;
+    min-width: 0; /* 모바일은 핵심 컬럼만 → 가로 스크롤 없이 맞춤 */
   }
   .oc-check,
   .oc-id,
