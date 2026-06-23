@@ -20,6 +20,7 @@
         v-model:active-menu="activeMenu"
         @home="goHome"
         @close="reset"
+        @close-nav="navOpen = false"
       />
 
       <!-- 모바일: 사이드바 드로어 백드롭 -->

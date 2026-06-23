@@ -13,6 +13,10 @@
       >
         <span class="material-symbols-outlined">{{ collapsed ? 'chevron_right' : 'chevron_left' }}</span>
       </button>
+      <!-- 모바일 드로어 닫기 -->
+      <button type="button" class="nav-close" aria-label="메뉴 닫기" @click="$emit('close-nav')">
+        <span class="material-symbols-outlined">close</span>
+      </button>
     </div>
 
     <!-- 메인 카테고리(아이콘 + 아코디언) → 하위 항목(텍스트) -->
@@ -75,7 +79,7 @@ const props = defineProps({
   groups: { type: Array, required: true },
   activeMenu: { type: String, default: '' },
 })
-const emit = defineEmits(['update:activeMenu', 'close', 'home'])
+const emit = defineEmits(['update:activeMenu', 'close', 'home', 'close-nav'])
 
 const collapsed = ref(false)
 const rootRef = ref(null)

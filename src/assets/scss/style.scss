@@ -186,6 +186,28 @@ thead th,
   }
 }
 
+// 모바일 드로어 닫기 버튼 — 기본(데스크탑)은 숨김
+.nav-close {
+  margin-left: auto;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #9a9ca4;
+  cursor: pointer;
+
+  .material-symbols-outlined {
+    font-size: 24px;
+  }
+  &:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.06);
+  }
+}
+
 // ── 접힌 상태: 아이콘만 표시 ──────────────────────────────────────────────
 .sidebar.collapsed {
   width: 72px;
@@ -1743,7 +1765,7 @@ table.grid {
 .home-title-row {
   flex-shrink: 0;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
   margin: 10px 0 18px;
 }
@@ -1759,7 +1781,6 @@ table.grid {
   display: flex;
   align-items: center;
   gap: 12px;
-  height: 100%;
 }
 
 // 파트너 로고: 흰 바탕 + 라운딩 박스
@@ -1768,7 +1789,7 @@ table.grid {
   align-items: center;
   justify-content: center;
   height: 100%;
-  padding: 0 16px;
+  padding: 10px 16px;
   background: #fff;
   border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 12px;
@@ -1813,6 +1834,65 @@ table.grid {
   padding: 20px;
   min-width: 0;
   overflow: hidden;
+}
+
+// ── 공통 데이터 테이블 ────────────────────────────────────────────────────
+// 구조/스크롤/페이지네이션 공통. 페이지별로 .dt-row 의 grid-template-columns 와
+// min-width(가로 스크롤 임계), 셀(.dt-cell-*) 스타일만 지정해 사용한다.
+.data-table {
+  flex: 1;
+  min-width: 0;
+  min-height: 0; // 컬럼 플렉스에서 내부 스크롤 정상 동작
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+  overflow: hidden;
+}
+// 헤더 + 본문 단일 스크롤 영역 — 세로/가로 모두 스크롤
+.dt-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+.dt-row {
+  display: grid;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  // grid-template-columns / min-width 는 각 페이지에서 지정
+}
+.dt-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  height: 40px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  background: var(--card);
+  border-bottom: 1px solid var(--line);
+}
+.dt-data {
+  height: 52px;
+  border-radius: 12px;
+  font-size: 14px;
+  color: var(--text);
+  transition: background 0.12s;
+}
+.dt-data.clickable { cursor: pointer; }
+.dt-data:hover { background: rgba(0, 0, 0, 0.03); }
+.dt-data.active { background: rgba(242, 226, 78, 0.16); }
+// 페이지네이션 푸터 — 카드 하단 고정(본문만 스크롤)
+.dt-foot {
+  flex-shrink: 0;
+  padding: 10px 10px 4px;
+  border-top: 1px solid var(--line);
+}
+.dt-empty {
+  padding: 40px 10px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
 }
 
 .card-head {
@@ -2864,36 +2944,31 @@ table.grid {
   color: var(--dash-muted);
   line-height: 1.45;
 }
-
-// 재고 알림
 .stock-list { list-style: none; margin: 12px 0 0; padding: 0; }
 .stock-row {
-  display: flex;
-  align-items: center;
-  gap: 9px;
+  display: flex; align-items: center; gap: 9px;
   padding: 10px 0;
   border-bottom: 1px solid var(--dash-line);
   font-size: 13px;
-
   &:last-child { border-bottom: 0; }
-
   .stock-ic { font-size: 19px; }
-  .stock-name { flex: 1; min-width: 0; color: var(--dash-text); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .stock-name {
+    overflow: hidden;
+    flex: 1; min-width: 0;
+    color: var(--dash-text); font-weight: 600; white-space: nowrap; text-overflow: ellipsis;
+  }
   .stock-qty { color: var(--dash-muted); font-variant-numeric: tabular-nums; }
   .stock-tag {
-    font-size: 11px;
-    font-weight: 700;
     padding: 2px 9px;
     border-radius: 999px;
+    font-size: 11px; font-weight: 700;
   }
-
   &.s-warn .stock-ic { color: #f59e0b; }
   &.s-warn .stock-tag { color: #b45309; background: rgba(245, 158, 11, 0.16); }
   &.s-danger .stock-ic { color: #dc2626; }
   &.s-danger .stock-tag { color: #dc2626; background: rgba(239, 68, 68, 0.16); }
 }
 
-// 좁은 화면 대응 — 매장 대시보드
 @media (max-width: 1080px) {
   .kpi-row { grid-template-columns: repeat(2, 1fr); }
   .dash-row.r-2-1,
@@ -2901,72 +2976,37 @@ table.grid {
   .dash-row.r-3 { grid-template-columns: 1fr; }
 }
 
-// 좁은 화면 대응
 @media (max-width: 1100px) {
-  .home-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-  .g-trend,
-  .g-leads,
-  .g-rail,
-  .g-new,
-  .g-pay {
-    grid-column: auto;
-    grid-row: auto;
-  }
-  .g-trend {
-    grid-column: 1 / span 2;
-  }
-  .g-revenue {
-    grid-column: auto;
-    grid-row: auto;
-  }
+  .home-grid { grid-template-columns: 1fr 1fr; }
+  .g-trend, .g-leads, .g-rail, .g-new, .g-pay { grid-column: auto; grid-row: auto;}
+  .g-trend { grid-column: 1 / span 2;}
+  .g-revenue { grid-column: auto; grid-row: auto;}
 }
 
-// ── 준비 중(플레이스홀더) ─────────────────────────────────────────────────
 .placeholder {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 16px;
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  background: var(--card); border: 1px solid var(--line); border-radius: 16px;
   color: var(--muted);
-
   .material-symbols-outlined {
     font-size: 48px;
     color: #d6d6d2;
   }
-
   .placeholder-title {
     font-size: 16px;
     font-weight: 600;
     color: var(--text);
   }
-
   .placeholder-sub {
     font-size: 13px;
   }
 }
 
-// ── 에러 ──────────────────────────────────────────────────────────────────
 .err {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  display: flex; align-items: center; gap: 6px;
+  padding: 14px; margin-top: 16px;
+  border: 1px solid #f3c0bb; border-radius: 10px; background: #fdeceb;
   color: #c0392b;
-  background: #fdeceb;
-  border: 1px solid #f3c0bb;
-  border-radius: 10px;
-  padding: 14px;
-  margin-top: 16px;
-
-  .material-symbols-outlined {
-    font-size: 20px;
-  }
+  .material-symbols-outlined { font-size: 20px;}
 }
 
 .no-match {
@@ -2976,112 +3016,49 @@ table.grid {
   text-align: center;
 }
 
-// ── 주문 상세 패널 슬라이드(우측 → 좌측 인 / 우측으로 아웃) ──
-.slide-panel-enter-active,
-.slide-panel-leave-active {
+.slide-panel-enter-active, .slide-panel-leave-active {
   transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.26s ease;
   will-change: transform;
 }
-.slide-panel-enter-from,
-.slide-panel-leave-to {
+.slide-panel-enter-from, .slide-panel-leave-to {
   transform: translateX(110%);
   opacity: 0;
 }
 
-// ════════════════════════════════════════════════════════════════════════
-//  반응형 — 태블릿 / 모바일 대응
-// ════════════════════════════════════════════════════════════════════════
-
-// 모바일 사이드바 드로어 토글 버튼 / 백드롭 — 기본(데스크탑)은 숨김
 .nav-toggle {
-  display: none;
-  align-items: center;
-  justify-content: center;
-  width: 38px;
-  height: 38px;
-  flex-shrink: 0;
-  border: 1px solid var(--line);
-  border-radius: 11px;
-  background: var(--card);
+  display: none; align-items: center; justify-content: center; width: 38px; height: 38px; flex-shrink: 0;
+  border: 1px solid var(--line); border-radius: 11px; background: var(--card);
   color: #5a5c64;
   cursor: pointer;
-
-  .material-symbols-outlined {
-    font-size: 22px;
-  }
-
-  &:hover {
-    background: #f3f2ef;
-  }
+  .material-symbols-outlined { font-size: 22px;}
+  &:hover { background: #f3f2ef;}
 }
-.nav-backdrop {
-  display: none;
-}
+.nav-backdrop { display: none;}
 
-// ── 태블릿 (≤1024px) ──────────────────────────────────────────────────────
 @media (max-width: 1024px) {
-  .main {
-    padding: 18px 18px;
-    margin: 10px 10px 10px 0;
-  }
-  .topbar {
-    margin-bottom: 16px;
-  }
-  .page-title {
-    font-size: 22px;
-  }
-  .home {
-    padding: 16px 18px 24px;
-  }
-  .home-title {
-    font-size: 26px;
-  }
-  // 홈 상단 네비: 좁으면 줄바꿈 + 가운데 메뉴 정렬
-  .home-nav {
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-  // 대시보드 그리드
-  .kpi-row {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .dash-row.r-2-1,
-  .dash-row.r-1-1,
-  .dash-row.r-3 {
-    grid-template-columns: 1fr;
-  }
+  .main { padding: 18px 18px; margin: 10px 10px 10px 0;}
+  .topbar { margin-bottom: 16px;}
+  .page-title { font-size: 22px;}
+  .home { padding: 16px 18px 24px;}
+  .home-title { font-size: 26px;}
+  .home-nav { flex-wrap: wrap; gap: 12px;}
+  .kpi-row { grid-template-columns: repeat(2, 1fr);}
+  .dash-row.r-2-1, .dash-row.r-1-1, .dash-row.r-3 { grid-template-columns: 1fr;}
 }
 
-// ── 모바일 (≤640px) ───────────────────────────────────────────────────────
 @media (max-width: 640px) {
-  // 사이드바 → 오프캔버스 드로어
-  .app {
-    position: relative;
-  }
+  .app { position: relative;}
   .sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    z-index: 60;
-    width: 270px;
-    margin: 0;
-    padding: 18px 14px;
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 60;
+    width: 100%; margin: 0; padding: 18px 16px;
     transform: translateX(-100%);
     transition: transform 0.26s cubic-bezier(0.4, 0, 0.2, 1);
   }
-  .app.nav-open .sidebar {
-    transform: none;
-  }
-  // 모바일에서는 사이드바 접기 버튼 숨김(드로어로만 사용)
-  .sidebar .collapse-btn {
-    display: none;
-  }
+  .app.nav-open .sidebar { transform: none;}
+  .sidebar .collapse-btn { display: none;}
+  .sidebar .nav-close { display: inline-flex;} /* 로고 옆 닫기 버튼 노출 */
   .nav-backdrop {
-    display: block;
-    position: fixed;
-    inset: 0;
-    z-index: 55;
+    display: block; position: fixed; inset: 0; z-index: 55;
     background: rgba(0, 0, 0, 0.45);
     opacity: 0;
     pointer-events: none;
@@ -3091,85 +3068,40 @@ table.grid {
     opacity: 1;
     pointer-events: auto;
   }
-  .nav-toggle {
-    display: inline-flex;
-  }
-
-  // 메인 영역: 풀폭 + 라운딩 제거
+  .nav-toggle { display: inline-flex;}
   .main {
-    margin: 0;
+    margin: 0; padding: 14px 14px;
     border-radius: 0;
-    padding: 14px 14px;
   }
   .topbar {
     gap: 10px;
     margin-bottom: 14px;
   }
   .page-title {
-    font-size: 19px;
-    flex: 1;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow: hidden; flex: 1; min-width: 0;
+    font-size: 19px; text-overflow: ellipsis; white-space: nowrap;
   }
-  .topbar-actions {
-    gap: 6px;
-  }
-  .profile {
-    padding-left: 4px;
-  }
-  // 모바일은 아바타만 표시(이름/메일 숨김)
-  .profile-meta {
-    display: none;
-  }
-
-  // ── 대시보드(홈) ──
-  .home {
-    padding: 12px 14px 22px;
-  }
-  .home-nav {
-    gap: 10px;
-    padding-bottom: 12px;
-  }
+  .topbar-actions { gap: 6px;}
+  .profile { padding-left: 4px;}
+  .profile-meta { display: none;}
+  .home { padding: 12px 14px 22px;}
+  .home-nav { gap: 10px; padding-bottom: 12px;}
   .home-brand {
     flex: 0 0 auto;
-    .home-logo {
-      height: 36px;
-    }
+    .home-logo { height: 36px;}
   }
-  // 우측 아이콘: 브랜드와 같은 줄, 남는 폭 채우되 줄어들 수 있게
-  .home-right {
-    flex: 1;
-    min-width: 0;
-    gap: 6px;
-  }
-  // 프로필 텍스트 숨김(홈 우측)
-  .home-right .profile-meta {
-    display: none;
-  }
-  // ── 상단 메뉴 pills → 하단 고정 플로팅 바 ──
+  .home-right { flex: 1; gap: 6px; min-width: 0;}
+  .home-right .profile-meta { display: none;}
   .home-menunav {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 50;
-    order: 0;
-    flex: none;
-    max-width: none;
-    display: flex;
-    justify-content: center;
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; order: 0;
+    display: flex; flex: none; max-width: none; justify-content: center;
     padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
     pointer-events: none; // 양옆 빈 영역 클릭은 아래 콘텐츠로 통과
   }
   .home-pills {
-    pointer-events: auto;
-    width: max-content;
-    max-width: 100%;
-    margin: 0;
+    overflow-x: auto; width: max-content; max-width: 100%; margin: 0;
     justify-content: flex-start;
-    overflow-x: auto;
+    pointer-events: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     box-shadow: 0 10px 34px rgba(0, 0, 0, 0.22);
@@ -3178,119 +3110,43 @@ table.grid {
   .home .home-pills {background: #ffffff;}
   .home .pill-indicator { border-radius: 4px;}
   .home-pills::-webkit-scrollbar { display: none;}
+  .home-title-actions { height: 100%;}
   .partner-logo-img { max-width: 80px;}
-  // 하위메뉴 → 하단 바 위로 슬라이드 업(바텀시트)
   .home-submenu {
-    pointer-events: auto;
-    position: fixed;
-    left: 0 !important;
-    right: 0;
-    bottom: calc(72px + env(safe-area-inset-bottom));
-    top: auto;
-    z-index: 49;
-    width: auto;
-    min-width: 0;
-    max-width: none;
-    max-height: 56vh;
     overflow-y: auto;
-    margin: 0 10px;
+    position: fixed; left: 0 !important; right: 0; bottom: calc(72px + env(safe-area-inset-bottom)); top: auto; z-index: 49;
+    width: auto; min-width: 0; max-width: none; max-height: 56vh; margin: 0 10px;
     border-radius: 16px;
+    pointer-events: auto;
   }
-  // 서브메뉴 백드롭
   .home-sub-backdrop {
-    position: fixed;
-    inset: 0;
-    z-index: 48;
+    position: fixed; z-index: 48; inset: 0;
     background: rgba(0, 0, 0, 0.4);
   }
-
-  // 슬라이드 업 애니메이션(아래 → 위)
-  .submenu-enter-active,
-  .submenu-leave-active {
+  .submenu-enter-active, .submenu-leave-active {
     transition: opacity 0.22s ease, transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
   }
-  .submenu-enter-from,
-  .submenu-leave-to {
-    opacity: 0;
-    transform: translateY(110%);
-  }
-
-  // 하단 고정 바에 가리지 않도록 콘텐츠 하단 여백 확보
-  .home {
-    padding-bottom: calc(86px + env(safe-area-inset-bottom));
-  }
-  .home-title-row {
-    flex-wrap: wrap;
-    gap: 10px 12px;
-    align-items: flex-start;
-  }
-  .home-title {
-    font-size: 22px;
-  }
-  .home-subtitle {
-    font-size: 12px;
-  }
-
-  // 대시보드 그리드 — KPI 2열, 차트 높이 축소
-  .dash {
-    gap: 12px;
-  }
-  .kpi-row {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-  }
-  .kpi-value {
-    font-size: 21px;
-  }
-  .chart-box {
-    height: 200px;
-  }
-  // 매출 추이: 일/주/월 버튼을 금액 아래 우측으로 (상단 4px 간격)
-  .card-head:has(.seg) {
-    flex-direction: column;
-  }
-  .card-head:has(.seg) .seg {
-    align-self: flex-end;
-    margin-top: 4px;
-  }
-  // 결제수단/채널 도넛 카드: 세로 정렬(도넛 위 + 범례 아래)
-  .donut-card {
-    flex-direction: column;
-    align-items: center;
-    gap: 14px;
-    flex: none; // 콘텐츠 높이로 (범례가 잘리지 않게)
-  }
-  // 도넛은 고정 정사각형 → 차트 왜곡/가운데 텍스트 어긋남 방지
-  .donut-box {
-    width: 180px;
-    height: 180px;
-    max-height: none;
-    aspect-ratio: auto;
-    margin: 0;
-  }
-  .legend {
-    width: 100%;
-    flex: none;
-  }
-
-  // ── 엑셀 뷰어: 표 + 상세 패널 세로 정렬 ──
-  .viewer-grid {
-    flex-direction: column;
-  }
-  .detail {
-    width: auto;
-    max-height: 320px;
-  }
-  .filterbar,
-  .filterbar-right {
-    flex-wrap: wrap;
-  }
-  .filterbar .search {
-    flex: 1 0 100%;
-  }
+  .submenu-enter-from, .submenu-leave-to { opacity: 0; transform: translateY(110%);}
+  .home { padding-bottom: calc(86px + env(safe-area-inset-bottom));}
+  .home-title-row { flex-wrap: wrap; gap: 10px 12px;}
+  .home-title { font-size: 22px;}
+  .home-subtitle { font-size: 12px;}
+  .dash { gap: 12px;}
+  .kpi-row { grid-template-columns: repeat(2, 1fr); gap: 10px;}
+  .kpi-value { font-size: 21px;}
+  .chart-box { height: 200px;}
+  .card-head:has(.seg) { flex-direction: column;}
+  .card-head:has(.seg) .seg { align-self: flex-end; margin-top: 4px;}
+  .donut-card { flex-direction: column; align-items: center; gap: 14px; flex: none;}
+  .donut-box { width: 180px; height: 180px; max-height: none; aspect-ratio: auto; margin: 0;}
+  .legend { width: 100%; flex: none;}
+  .viewer-grid { flex-direction: column;}
+  .detail { width: auto; max-height: 320px;}
+  .filterbar, .filterbar-right { flex-wrap: wrap;}
+  .filterbar .search { flex: 1 0 100%;}
+  .filter-bar { margin-bottom: 8px !important;}
 }
 
-// ── 초소형 (≤420px): KPI 1열 ──────────────────────────────────────────────
 @media (max-width: 420px) {
   .kpi-row {
     grid-template-columns: 1fr;

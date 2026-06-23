@@ -7,14 +7,6 @@
 //   home : 풀페이지 대시보드로 진입하는 섹션 표시
 export const MENU_TREE = [
   {
-    id: 'dashboard', title: '대시보드', icon: 'dashboard', home: true,
-    items: [
-      { id: 'dash-sales', label: '매출 요약', icon: 'payments' },
-      { id: 'dash-ops', label: '영업 현황', icon: 'storefront' },
-      { id: 'dash-alerts', label: '알림', icon: 'notifications_active' },
-    ],
-  },
-  {
     id: 'orders', title: '주문·영업 관리', icon: 'receipt_long',
     items: [
       { id: 'ord-daily', label: '일일 영업 입력', icon: 'edit_calendar', tag: '수기/엑셀' },

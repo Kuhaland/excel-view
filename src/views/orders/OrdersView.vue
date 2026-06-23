@@ -10,11 +10,11 @@
     </FilterBar>
 
     <div class="ord-grid">
-      <!-- 테이블 -->
-      <div class="ord-table card">
+      <!-- 테이블 (공통 .data-table) -->
+      <div class="ord-table data-table card">
         <!-- 헤더 + 본문을 한 컨테이너로 → 내용이 넓으면 가로 스크롤(헤더 sticky로 함께 스크롤) -->
-        <div ref="bodyRef" class="ord-scroll">
-          <div class="ord-head ord-row">
+        <div ref="bodyRef" class="dt-scroll">
+          <div class="dt-head dt-row">
             <span class="oc-check">
               <Checkbox
                 :model-value="allChecked"
@@ -33,7 +33,7 @@
           <div
             v-for="o in pagedOrders"
             :key="o.id"
-            class="ord-row ord-data"
+            class="dt-row dt-data clickable"
             :class="{ active: o.id === activeId }"
             @click="activeId = o.id"
           >
@@ -59,7 +59,7 @@
         </div>
 
         <!-- 페이지네이션(테이블 카드 하단 고정) -->
-        <div class="ord-foot">
+        <div class="dt-foot">
           <Pagination v-model="page" :total="viewOrders.length" :page-size="pageSize" />
         </div>
       </div>
@@ -204,7 +204,7 @@ const viewOrders = computed(() => {
 })
 
 // 페이징 — 페이지당 행 수는 스크롤 영역(헤더 제외) 높이에 맞춰 동적 계산
-const ROW_H = 56 // .ord-data 행 높이(px)
+const ROW_H = 56 // .dt-data 행 높이(px)
 const bodyRef = ref(null)
 const page = ref(1)
 const pageSize = ref(1)
@@ -217,8 +217,8 @@ const pagedOrders = computed(() => {
 function recalcPageSize() {
   const el = bodyRef.value
   if (!el) return
-  const headH = el.querySelector('.ord-head')?.offsetHeight || 40
-  const rowH = el.querySelector('.ord-data')?.offsetHeight || ROW_H
+  const headH = el.querySelector('.dt-head')?.offsetHeight || 40
+  const rowH = el.querySelector('.dt-data')?.offsetHeight || ROW_H
   const fit = Math.floor((el.clientHeight - headH) / rowH)
   pageSize.value = Math.max(1, fit)
 }
@@ -259,6 +259,8 @@ function toggleAll() {
 </script>
 
 <style scoped>
+/* 공통 테이블 구조/스크롤/페이지네이션은 전역 .data-table 계열에서 처리.
+   여기서는 이 페이지의 컬럼 정의·셀·배지·반응형만 지정한다. */
 .orders {
   flex: 1;
   min-height: 0;
@@ -266,8 +268,7 @@ function toggleAll() {
   flex-direction: column;
 }
 
-
-/* 레이아웃 */
+/* 레이아웃 (테이블 + 상세 패널) */
 .ord-grid {
   flex: 1;
   min-height: 0;
@@ -275,57 +276,12 @@ function toggleAll() {
   gap: 16px;
 }
 
-/* 테이블 카드 */
-.ord-table {
-  flex: 1;
-  min-width: 0;
-  min-height: 0; /* 컬럼 플렉스(모바일)에서 내부 스크롤이 정상 동작하도록 */
-  display: flex;
-  flex-direction: column;
-  padding: 6px 6px 6px;
-  overflow: hidden;
-}
-.ord-row {
-  display: grid;
+/* 컬럼 정의 + 가로 스크롤 임계 너비 */
+.dt-row {
   grid-template-columns: 40px 96px minmax(180px, 1.4fr) 110px 120px 80px 40px;
-  align-items: center;
-  gap: 8px;
-  padding: 0 10px;
-  min-width: 720px; /* 이보다 좁아지면 가로 스크롤 */
+  min-width: 720px;
 }
-.ord-head {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  height: 40px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--muted);
-  background: var(--card);
-  border-bottom: 1px solid var(--line);
-}
-/* 헤더 + 본문 단일 스크롤 영역 — 세로/가로 모두 스크롤 */
-.ord-scroll {
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
-}
-/* 페이지네이션 푸터 — 카드 하단 고정(본문만 스크롤) */
-.ord-foot {
-  flex-shrink: 0;
-  padding: 10px 10px 4px;
-  border-top: 1px solid var(--line);
-}
-.ord-data {
-  height: 56px;
-  border-radius: 12px;
-  font-size: 14px;
-  color: var(--text);
-  cursor: pointer;
-  transition: background 0.12s;
-}
-.ord-data:hover { background: rgba(0, 0, 0, 0.03); }
-.ord-data.active { background: rgba(242, 226, 78, 0.16); }
+.dt-data { height: 56px; } /* 이 페이지 행 높이 */
 
 /* 체크박스 셀 정렬 (체크박스는 Checkbox 컴포넌트) */
 .oc-check :deep(.base-checkbox) { padding: 0; }
@@ -369,8 +325,7 @@ function toggleAll() {
 
 /* 모바일: 테이블 핵심 컬럼만(고객·상태·금액) */
 @media (max-width: 640px) {
-
-  .ord-row {
+  .dt-row {
     grid-template-columns: 1fr auto auto;
     gap: 10px;
     min-width: 0; /* 모바일은 핵심 컬럼만 → 가로 스크롤 없이 맞춤 */
@@ -380,6 +335,6 @@ function toggleAll() {
   .oc-date,
   .oc-more { display: none; }
 
-  .ord-data { height: 52px; }
+  .dt-data { height: 52px; }
 }
 </style>

@@ -9,11 +9,11 @@
       </template>
     </FilterBar>
 
-    <!-- 테이블 -->
-    <div class="log-table card">
+    <!-- 테이블 (공통 .data-table) -->
+    <div class="log-table data-table card">
       <!-- 헤더 + 본문 단일 스크롤 → 내용이 넓으면 가로 스크롤(헤더 sticky) -->
-      <div ref="bodyRef" class="log-scroll">
-        <div class="log-head log-row">
+      <div ref="bodyRef" class="dt-scroll">
+        <div class="dt-head dt-row">
           <span class="lc-time">일시</span>
           <span class="lc-user">사용자</span>
           <span class="lc-target">대상</span>
@@ -21,7 +21,7 @@
           <span class="lc-detail">내용</span>
         </div>
 
-        <div v-for="r in pagedRows" :key="r.id" class="log-row log-data">
+        <div v-for="r in pagedRows" :key="r.id" class="dt-row dt-data">
           <span class="lc-time">{{ r.datetime }}</span>
           <span class="lc-user">
             <span class="avatar-sm" :style="{ background: r.color }">{{ r.user.charAt(0) }}</span>
@@ -34,11 +34,11 @@
           <span class="lc-detail" :title="r.detail">{{ r.detail }}</span>
         </div>
 
-        <div v-if="!viewRows.length" class="log-empty">조건에 맞는 이력이 없습니다.</div>
+        <div v-if="!viewRows.length" class="dt-empty">조건에 맞는 이력이 없습니다.</div>
       </div>
 
       <!-- 페이지네이션(테이블 카드 하단 고정) -->
-      <div class="log-foot">
+      <div class="dt-foot">
         <Pagination v-model="page" :total="viewRows.length" :page-size="pageSize" />
       </div>
     </div>
@@ -141,8 +141,8 @@ const pagedRows = computed(() => {
 function recalcPageSize() {
   const el = bodyRef.value
   if (!el) return
-  const headH = el.querySelector('.log-head')?.offsetHeight || 40
-  const rowH = el.querySelector('.log-data')?.offsetHeight || ROW_H
+  const headH = el.querySelector('.dt-head')?.offsetHeight || 40
+  const rowH = el.querySelector('.dt-data')?.offsetHeight || ROW_H
   const fit = Math.floor((el.clientHeight - headH) / rowH)
   pageSize.value = Math.max(1, fit)
 }
@@ -169,6 +169,8 @@ watch([actionFilter, targetFilter, sort], () => {
 </script>
 
 <style scoped>
+/* 공통 테이블 구조/스크롤/페이지네이션은 전역 .data-table 계열에서 처리.
+   여기서는 이 페이지의 컬럼 정의·셀·배지·반응형만 지정한다. */
 .logs {
   flex: 1;
   min-height: 0;
@@ -176,54 +178,12 @@ watch([actionFilter, targetFilter, sort], () => {
   flex-direction: column;
 }
 
-/* 테이블 카드 */
-.log-table {
-  flex: 1;
-  min-width: 0;
-  min-height: 0; /* 컬럼 플렉스에서 내부 스크롤이 정상 동작하도록 */
-  display: flex;
-  flex-direction: column;
-  padding: 6px 6px 6px;
-  overflow: hidden;
-}
-.log-row {
-  display: grid;
+/* 컬럼 정의 + 가로 스크롤 임계 너비 */
+.dt-row {
   grid-template-columns: 150px 130px 150px 84px minmax(220px, 1fr);
-  align-items: center;
-  gap: 8px;
-  padding: 0 12px;
-  min-width: 760px; /* 이보다 좁아지면 가로 스크롤 */
+  min-width: 760px;
 }
-.log-head {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  height: 40px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--muted);
-  background: var(--card);
-  border-bottom: 1px solid var(--line);
-}
-/* 헤더 + 본문 단일 스크롤 영역 — 세로/가로 모두 스크롤 */
-.log-scroll {
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
-}
-/* 페이지네이션 푸터 — 카드 하단 고정(본문만 스크롤) */
-.log-foot {
-  flex-shrink: 0;
-  padding: 10px 10px 4px;
-  border-top: 1px solid var(--line);
-}
-.log-data {
-  height: 52px;
-  border-radius: 12px;
-  font-size: 13px;
-  color: var(--text);
-}
-.log-data:hover { background: rgba(0, 0, 0, 0.03); }
+.dt-data { font-size: 13px; } /* 이 페이지 본문 글자 크기 */
 
 /* 셀 */
 .lc-time { color: var(--muted); font-variant-numeric: tabular-nums; }
@@ -240,13 +200,6 @@ watch([actionFilter, targetFilter, sort], () => {
   font-size: 12px; font-weight: 700; color: #3a2c00;
 }
 
-.log-empty {
-  padding: 40px 10px;
-  text-align: center;
-  font-size: 13px;
-  color: var(--muted);
-}
-
 /* 작업 배지 */
 .log-badge {
   display: inline-block;
@@ -260,7 +213,7 @@ watch([actionFilter, targetFilter, sort], () => {
 
 /* 태블릿: 내용 컬럼 축소 위해 대상 숨김 (가로 스크롤 없이 맞춤) */
 @media (max-width: 900px) {
-  .log-row {
+  .dt-row {
     grid-template-columns: 140px 120px 80px 1fr;
     min-width: 0;
   }
@@ -269,12 +222,12 @@ watch([actionFilter, targetFilter, sort], () => {
 
 /* 모바일: 핵심 컬럼만(작업 · 내용) + 일시는 보조 표시 */
 @media (max-width: 640px) {
-  .log-row {
+  .dt-row {
     grid-template-columns: auto 1fr;
     gap: 10px;
   }
   .lc-time,
   .lc-user { display: none; }
-  .log-data { height: 50px; }
+  .dt-data { height: 50px; }
 }
 </style>
