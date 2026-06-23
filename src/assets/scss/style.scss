@@ -135,6 +135,12 @@ thead th,
 .fade-enter-from {
   opacity: 0;
 }
+.fade-leave-active {
+  transition: opacity 0.22s ease;
+}
+.fade-leave-to {
+  opacity: 0;
+}
 
 .app {
   width: 100%;
@@ -568,7 +574,7 @@ thead th,
 .topbar-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 4px;
 }
 
 .icon-btn {
@@ -2647,10 +2653,9 @@ table.grid {
   color: var(--dash-muted);
 }
 .kpi-ic {
-  font-size: 22px;
-  border-radius: 10px;
-  padding: 6px;
-  // 채워진 아이콘으로 선명하게(색/배경은 KPI별 인라인 지정)
+  font-size: 18px;
+  border-radius: 50%;
+  padding: 16px;
   font-variation-settings: "FILL" 1, "wght" 500, "GRAD" 0, "opsz" 24;
 }
 .kpi-value {
@@ -3142,32 +3147,76 @@ table.grid {
   .home-right .profile-meta {
     display: none;
   }
-  // 메뉴 pills를 다음 줄 전체폭으로 내리고, 폭을 넘으면 가로 스크롤(화면 밖으로 안 나감)
+  // ── 상단 메뉴 pills → 하단 고정 플로팅 바 ──
   .home-menunav {
-    order: 3;
-    flex: 1 0 100%;
-    min-width: 0;
-    max-width: 100%;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
+    order: 0;
+    flex: none;
+    max-width: none;
+    display: flex;
+    justify-content: center;
+    padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+    pointer-events: none; // 양옆 빈 영역 클릭은 아래 콘텐츠로 통과
   }
   .home-pills {
+    pointer-events: auto;
     width: max-content;
     max-width: 100%;
-    margin: 0 auto;
+    margin: 0;
     justify-content: flex-start;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
+    box-shadow: 0 10px 34px rgba(0, 0, 0, 0.22);
+    border-radius: 12px;
   }
-  .home-pills::-webkit-scrollbar {
-    display: none;
-  }
-  // 하위메뉴 드롭다운: 화면 폭에 맞춤(인라인 left 오버라이드)
+  .home .home-pills {background: #ffffff;}
+  .home .pill-indicator { border-radius: 4px;}
+  .home-pills::-webkit-scrollbar { display: none;}
+  .partner-logo-img { max-width: 80px;}
+  // 하위메뉴 → 하단 바 위로 슬라이드 업(바텀시트)
   .home-submenu {
+    pointer-events: auto;
+    position: fixed;
     left: 0 !important;
     right: 0;
+    bottom: calc(72px + env(safe-area-inset-bottom));
+    top: auto;
+    z-index: 49;
     width: auto;
     min-width: 0;
-    max-width: 100%;
+    max-width: none;
+    max-height: 56vh;
+    overflow-y: auto;
+    margin: 0 10px;
+    border-radius: 16px;
+  }
+  // 서브메뉴 백드롭
+  .home-sub-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 48;
+    background: rgba(0, 0, 0, 0.4);
+  }
+
+  // 슬라이드 업 애니메이션(아래 → 위)
+  .submenu-enter-active,
+  .submenu-leave-active {
+    transition: opacity 0.22s ease, transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  .submenu-enter-from,
+  .submenu-leave-to {
+    opacity: 0;
+    transform: translateY(110%);
+  }
+
+  // 하단 고정 바에 가리지 않도록 콘텐츠 하단 여백 확보
+  .home {
+    padding-bottom: calc(86px + env(safe-area-inset-bottom));
   }
   .home-title-row {
     flex-wrap: wrap;
@@ -3195,15 +3244,32 @@ table.grid {
   .chart-box {
     height: 200px;
   }
-  // 결제수단 도넛 카드: 세로 정렬
+  // 매출 추이: 일/주/월 버튼을 금액 아래 우측으로 (상단 4px 간격)
+  .card-head:has(.seg) {
+    flex-direction: column;
+  }
+  .card-head:has(.seg) .seg {
+    align-self: flex-end;
+    margin-top: 4px;
+  }
+  // 결제수단/채널 도넛 카드: 세로 정렬(도넛 위 + 범례 아래)
   .donut-card {
     flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
+    align-items: center;
+    gap: 14px;
+    flex: none; // 콘텐츠 높이로 (범례가 잘리지 않게)
   }
+  // 도넛은 고정 정사각형 → 차트 왜곡/가운데 텍스트 어긋남 방지
   .donut-box {
-    margin: 0 auto;
-    max-height: 170px;
+    width: 180px;
+    height: 180px;
+    max-height: none;
+    aspect-ratio: auto;
+    margin: 0;
+  }
+  .legend {
+    width: 100%;
+    flex: none;
   }
 
   // ── 엑셀 뷰어: 표 + 상세 패널 세로 정렬 ──

@@ -22,7 +22,16 @@
         />
       </div>
 
-      <!-- 1차 메뉴(pills) + hover 시 하단 하위메뉴 -->
+      <!-- 모바일: 서브메뉴(바텀시트) 백드롭 -->
+      <Transition name="fade">
+        <div
+          v-if="isMobile && hoverSection && hoverSection.items.length"
+          class="home-sub-backdrop"
+          @click="closeSub"
+        ></div>
+      </Transition>
+
+      <!-- 1차 메뉴(pills): 데스크탑 hover / 모바일 하단 고정 바 + 탭 -->
       <div class="home-menunav" @mouseleave="scheduleClose">
         <nav class="home-pills">
           <span class="pill-indicator" :style="indicatorStyle"></span>
@@ -35,6 +44,7 @@
             :class="{ on: i === hoverIndex }"
             :aria-label="p.title"
             @mouseenter="openSub(i)"
+            @click="onPillClick(i)"
           >
             <span class="material-symbols-outlined">{{ p.icon }}</span>
           </button>
@@ -336,7 +346,7 @@ import { BarChart, LineChart, PieChart } from 'echarts/charts'
 import { GridComponent, TooltipComponent } from 'echarts/components'
 import VChart from 'vue-echarts'
 import logo from '../assets/images/logo.png'
-import partnerLogo from '../assets/images/partner/shabu79.png'
+import partnerLogo from '../assets/images/partner/smartscore.svg'
 import ToggleSwitch from '../components/ToggleSwitch.vue'
 import NotificationBell from '../components/NotificationBell.vue'
 import Button from '../components/Button.vue'
@@ -397,8 +407,17 @@ function moveIndicator() {
 }
 watch(hoverIndex, () => moveIndicator())
 
-// hover 의도(약간의 지연)로 pill ↔ 드롭다운 사이 이동을 매끄럽게
+// 모바일 판별 — 모바일은 하단 고정 바 + 탭(클릭)으로 토글, 데스크탑은 hover
+const isMobile = ref(false)
+let mq = null
+function onMq(e) {
+  isMobile.value = e.matches
+  if (!e.matches) hoverIndex.value = null // 데스크탑 복귀 시 서브메뉴 닫기
+}
+
+// hover 의도(약간의 지연)로 pill ↔ 드롭다운 사이 이동을 매끄럽게 (데스크탑 전용)
 function openSub(i) {
+  if (isMobile.value) return
   clearTimeout(closeTimer)
   hoverIndex.value = i
 }
@@ -406,7 +425,18 @@ function keepSub() {
   clearTimeout(closeTimer)
 }
 function scheduleClose() {
+  if (isMobile.value) return
   closeTimer = setTimeout(() => { hoverIndex.value = null }, 150)
+}
+
+// 모바일: 탭으로 서브메뉴 토글
+function onPillClick(i) {
+  if (!isMobile.value) return
+  clearTimeout(closeTimer)
+  hoverIndex.value = hoverIndex.value === i ? null : i
+}
+function closeSub() {
+  hoverIndex.value = null
 }
 
 function itemTarget(it) {
@@ -418,9 +448,15 @@ function go(id) {
   emit('navigate', id)
 }
 
-onMounted(() => window.addEventListener('resize', moveIndicator))
+onMounted(() => {
+  window.addEventListener('resize', moveIndicator)
+  mq = window.matchMedia('(max-width: 640px)')
+  isMobile.value = mq.matches
+  mq.addEventListener('change', onMq)
+})
 onBeforeUnmount(() => {
   window.removeEventListener('resize', moveIndicator)
+  mq && mq.removeEventListener('change', onMq)
   clearTimeout(closeTimer)
 })
 
@@ -494,6 +530,8 @@ const salesTrendOption = computed(() => {
     grid: { left: 4, right: 10, top: 16, bottom: 6, containLabel: true },
     tooltip: {
       trigger: 'axis',
+      appendToBody: true,
+      confine: true,
       axisPointer: { type: 'shadow' },
       textStyle: { fontWeight: CHART_FW },
       formatter: (p) => `${p[0].axisValue}${d.unit}  ${won(p[0].value)}`,
@@ -526,7 +564,14 @@ const salesTrendOption = computed(() => {
 function donutOption(items) {
   return {
     textStyle: { fontWeight: CHART_FW },
-    tooltip: { trigger: 'item', textStyle: { fontWeight: CHART_FW }, formatter: (p) => `${p.name}: ${won(p.value)} (${p.percent}%)` },
+    tooltip: {
+      trigger: 'item',
+      // 카드 overflow에 가려지지 않게 body로 렌더 + 화면 밖으로 나가지 않게 제한
+      appendToBody: true,
+      confine: true,
+      textStyle: { fontWeight: CHART_FW },
+      formatter: (p) => `${p.name}: ${won(p.value)} (${p.percent}%)`,
+    },
     series: [{
       type: 'pie',
       radius: ['60%', '92%'],

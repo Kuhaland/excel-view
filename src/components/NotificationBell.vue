@@ -265,4 +265,30 @@ export { ICONS, DEFAULT_ITEMS }
 .noti-pop-leave-active { transition: opacity 0.15s ease, transform 0.15s ease; }
 .noti-pop-enter-from,
 .noti-pop-leave-to { opacity: 0; transform: translateY(-6px); }
+
+/* 모바일: 화면 밖으로 나가지 않게 가운데 정렬 + 내용 전체 표시 */
+@media (max-width: 640px) {
+  .noti-backdrop {
+    background: rgba(0, 0, 0, 0.35);
+  }
+  .noti-layer {
+    position: fixed;
+    top: 60px;
+    left: 50%;
+    right: auto;
+    width: 92vw;
+    max-width: 92vw;
+    margin-left: -46vw; /* 92vw의 절반 → 가운데 정렬(transform은 트랜지션용으로 비움) */
+    max-height: 78vh;
+    display: flex;
+    flex-direction: column;
+  }
+  .noti-head,
+  .noti-more { flex-shrink: 0; }
+  .noti-list {
+    flex: 1;
+    min-height: 0;
+    max-height: none; /* 레이어 높이에 맞춰 스크롤 → 내용 잘림 없음 */
+  }
+}
 </style>
