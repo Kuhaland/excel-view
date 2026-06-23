@@ -41,7 +41,7 @@
 
     <div class="od-actions">
       <Button variant="dark" icon="my_location">배송 추적</Button>
-      <Button variant="primary" icon="undo">환불</Button>
+      <Button variant="primary" icon="undo" @click="$emit('close')">취소</Button>
     </div>
   </aside>
 </template>

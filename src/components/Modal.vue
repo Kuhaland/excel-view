@@ -164,4 +164,26 @@ onBeforeUnmount(() => {
   transform: translateY(12px) scale(0.98);
   opacity: 0;
 }
+
+/* 모바일: 모달을 전체 화면으로 */
+@media (max-width: 640px) {
+  .modal-overlay {
+    padding: 0;
+  }
+  .modal {
+    width: 100%;
+    height: 100%;
+    max-width: none !important; /* 인라인 max-width 덮어쓰기 */
+    max-height: none;
+    border-radius: 0;
+  }
+  .modal-body {
+    flex: 1; /* 남는 높이 채움 */
+  }
+  /* 전체화면이라 살짝 떠오르는 등장 애니메이션은 단순 페이드로 */
+  .modal-enter-from .modal,
+  .modal-leave-to .modal {
+    transform: none;
+  }
+}
 </style>

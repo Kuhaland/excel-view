@@ -153,9 +153,16 @@ export const MENUS = MENU_TREE.flatMap((sec) =>
     : [{ ...it, section: sec.id }]))
 )
 
+// 하단 고정 메뉴(섹션/대시보드 IA 밖, 사이드바 하단에만 노출)
+export const SETTINGS_MENU = { id: 'settings', label: '설정', icon: 'settings' }
+
 // id로 메뉴(또는 섹션) 조회
 export function findMenu(id) {
-  return MENUS.find((m) => m.id === id) || SECTIONS.find((s) => s.id === id) || null
+  return (
+    MENUS.find((m) => m.id === id) ||
+    SECTIONS.find((s) => s.id === id) ||
+    (id === SETTINGS_MENU.id ? SETTINGS_MENU : null)
+  )
 }
 
 // 상단 우측으로 뺄 메뉴(현재 IA에는 없음)

@@ -44,6 +44,17 @@
       </div>
     </nav>
 
+    <!-- 하단 고정: 설정 / 로그아웃 -->
+    <button
+      type="button"
+      class="logout nav-foot-btn"
+      :class="{ active: activeMenu === 'settings' }"
+      title="설정"
+      @click="onSelect('settings')"
+    >
+      <span class="material-symbols-outlined">settings</span>
+      <span class="logout-text">설정</span>
+    </button>
     <button type="button" class="logout" title="로그아웃" @click="$emit('close')">
       <span class="material-symbols-outlined">logout</span>
       <span class="logout-text">로그아웃</span>

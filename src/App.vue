@@ -166,7 +166,7 @@ const helpOpen = ref(false)
 function menuFromHash() {
   const id = window.location.hash.replace(/^#\/?/, '')
   if (!id) return 'home'
-  return MENUS.some((m) => m.id === id) ? id : 'home'
+  return MENUS.some((m) => m.id === id) || id === 'settings' ? id : 'home'
 }
 
 const fileName = ref('')

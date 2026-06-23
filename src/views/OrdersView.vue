@@ -1,13 +1,13 @@
 <template>
   <div class="orders">
-    <!-- 필터/정렬 툴바 -->
-    <div class="ord-toolbar">
-      <div class="ord-filters">
-        <Select v-model="statusFilter" :options="statusOptions" :style="{ width: '150px' }" />
-        <Select v-model="range" :options="rangeOptions" :style="{ width: '170px' }" />
-      </div>
-      <Select v-model="sort" :options="sortOptions" :style="{ width: '130px' }" />
-    </div>
+    <!-- 필터/정렬 툴바 (공통 FilterBar: 모바일은 필터 버튼 + 바텀시트) -->
+    <FilterBar title="주문 필터" :count="activeFilterCount" @reset="resetFilters">
+      <Select v-model="statusFilter" :options="statusOptions" :style="{ width: '150px' }" />
+      <Select v-model="range" :options="rangeOptions" :style="{ width: '170px' }" />
+      <template #trailing>
+        <Select v-model="sort" :options="sortOptions" :style="{ width: '130px' }" />
+      </template>
+    </FilterBar>
 
     <div class="ord-grid">
       <!-- 테이블 -->
@@ -28,9 +28,9 @@
           <span class="oc-more"></span>
         </div>
 
-        <div class="ord-body">
+        <div ref="bodyRef" class="ord-body">
           <div
-            v-for="o in viewOrders"
+            v-for="o in pagedOrders"
             :key="o.id"
             class="ord-row ord-data"
             :class="{ active: o.id === activeId }"
@@ -56,6 +56,11 @@
             </span>
           </div>
         </div>
+
+        <!-- 페이지네이션(테이블 카드 하단 고정) -->
+        <div class="ord-foot">
+          <Pagination v-model="page" :total="viewOrders.length" :page-size="pageSize" />
+        </div>
       </div>
 
       <!-- 상세 패널 (row 클릭 시 우측에서 슬라이드 인 / 닫기 시 우측으로 슬라이드 아웃) -->
@@ -67,10 +72,12 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import OrderDetailPanel from './OrderDetailPanel.vue'
 import Checkbox from '../components/Checkbox.vue'
 import Select from '../components/Select.vue'
+import FilterBar from '../components/FilterBar.vue'
+import Pagination from '../components/Pagination.vue'
 
 // 필터/정렬 옵션 (Select 컴포넌트용)
 const statusOptions = [
@@ -118,21 +125,47 @@ const P = [
 ]
 
 // 주문 목록(임시) — total은 items 합계로 계산
-const RAW = [
-  { id: '390561', name: 'Michelle Black', status: 'Paid', date: 'Jan 8', time: '13:52', it: [0, 7] },
-  { id: '663334', name: 'Janice Chandler', status: 'Delivered', date: 'Jan 6', time: '11:20', it: [4, 5, 2] },
-  { id: '418135', name: 'Mildred Hall', status: 'Paid', date: 'Jan 5', time: '09:05', it: [6, 3] },
-  { id: '801999', name: 'Ana Carter', status: 'Paid', date: 'Jan 2', time: '18:40', it: [5, 4] },
-  { id: '517783', name: 'John Sherman', status: 'Completed', date: 'Dec 28', time: '16:12', it: [0, 6] },
-  { id: '602992', name: 'James Miller', status: 'Paid', date: 'Dec 26', time: '14:08', it: [0, 1, 2, 3, 4] },
-  { id: '730345', name: 'Travis French', status: 'Paid', date: 'Dec 22', time: '12:33', it: [7, 2] },
-  { id: '126955', name: 'Ralph Hall', status: 'Paid', date: 'Dec 20', time: '10:50', it: [4, 5, 7] },
-  { id: '045321', name: 'Gary Gilbert', status: 'Completed', date: 'Dec 18', time: '19:24', it: [6, 7] },
-  { id: '082848', name: 'Frances Howell', status: 'Delivered', date: 'Dec 17', time: '13:00', it: [4, 5, 0] },
-  { id: '646072', name: 'Herbert Boyd', status: 'Paid', date: 'Dec 14', time: '15:45', it: [1, 6] },
-  { id: '432019', name: 'Alan White', status: 'Paid', date: 'Dec 13', time: '08:30', it: [7, 3] },
-  { id: '985927', name: 'Julie Martin', status: 'Delivered', date: 'Dec 11', time: '17:10', it: [2, 6, 3] },
+const NAMES = [
+  'Michelle Black', 'Janice Chandler', 'Mildred Hall', 'Ana Carter', 'John Sherman',
+  'James Miller', 'Travis French', 'Ralph Hall', 'Gary Gilbert', 'Frances Howell',
+  'Herbert Boyd', 'Alan White', 'Julie Martin', 'Emma Lewis', 'Oscar Reed',
+  'Nina Patel', 'Leo Turner', 'Grace Kim', 'Victor Ross', 'Diana Park',
+  'Henry Cole', 'Olivia Shaw', 'Marcus Bell', 'Sofia Nguyen', 'Ethan Wood',
+  'Chloe Adams', 'Liam Foster', 'Maya Diaz', 'Noah Price', 'Ivy Bennett',
 ]
+const STATUSES = ['Paid', 'Delivered', 'Completed']
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+const pad2 = (n) => String(n).padStart(2, '0')
+const randInt = (n) => Math.floor(Math.random() * n)
+const pick = (arr) => arr[randInt(arr.length)]
+
+const usedIds = new Set()
+function uniqueId() {
+  let id
+  do {
+    id = String(100000 + randInt(900000)) // 6자리
+  } while (usedIds.has(id))
+  usedIds.add(id)
+  return id
+}
+
+// 무작위 100건 생성
+const RAW = Array.from({ length: 100 }, () => {
+  // 상품 1~4개 무작위(중복 없이)
+  const pool = [...Array(P.length).keys()]
+  const count = 1 + randInt(Math.min(4, pool.length))
+  const it = []
+  for (let k = 0; k < count; k++) it.push(pool.splice(randInt(pool.length), 1)[0])
+  return {
+    id: uniqueId(),
+    name: pick(NAMES),
+    status: pick(STATUSES),
+    date: `${pick(MONTHS)} ${1 + randInt(28)}`,
+    time: `${pad2(randInt(24))}:${pad2(randInt(60))}`,
+    it,
+  }
+})
 
 const orders = RAW.map((o, idx) => {
   const items = o.it.map((i) => P[i])
@@ -147,8 +180,17 @@ const orders = RAW.map((o, idx) => {
 const statusFilter = ref('all')
 const range = ref('all')
 const sort = ref('date')
+
+// 적용된 필터 개수(모바일 필터 버튼 배지) — 정렬은 제외
+const activeFilterCount = computed(
+  () => (statusFilter.value !== 'all' ? 1 : 0) + (range.value !== 'all' ? 1 : 0)
+)
+function resetFilters() {
+  statusFilter.value = 'all'
+  range.value = 'all'
+}
 const activeId = ref(null) // row 클릭 시 상세 패널 활성
-const selectedIds = ref(['602992', '418135', '730345', '045321']) // Checkbox 배열 v-model
+const selectedIds = ref([]) // Checkbox 배열 v-model
 
 const viewOrders = computed(() => {
   let list = orders
@@ -158,6 +200,45 @@ const viewOrders = computed(() => {
   else if (range.value === 'hi') list = list.filter((o) => o.total >= 1500000)
   if (sort.value === 'total') list = [...list].sort((a, b) => b.total - a.total)
   return list
+})
+
+// 페이징 — 페이지당 행 수는 ord-body 높이에 맞춰 동적 계산
+const ROW_H = 56 // .ord-data 행 높이(px)
+const bodyRef = ref(null)
+const page = ref(1)
+const pageSize = ref(1)
+const pagedOrders = computed(() => {
+  const start = (page.value - 1) * pageSize.value
+  return viewOrders.value.slice(start, start + pageSize.value)
+})
+
+// ord-body 가용 높이 ÷ 행 높이 = 한 페이지에 들어갈 행 수
+function recalcPageSize() {
+  const el = bodyRef.value
+  if (!el) return
+  const rowH = el.querySelector('.ord-data')?.offsetHeight || ROW_H
+  const fit = Math.floor(el.clientHeight / rowH)
+  pageSize.value = Math.max(1, fit)
+}
+
+let ro = null
+onMounted(() => {
+  nextTick(recalcPageSize)
+  if (typeof ResizeObserver !== 'undefined' && bodyRef.value) {
+    ro = new ResizeObserver(recalcPageSize)
+    ro.observe(bodyRef.value)
+  } else {
+    window.addEventListener('resize', recalcPageSize)
+  }
+})
+onBeforeUnmount(() => {
+  if (ro) ro.disconnect()
+  else window.removeEventListener('resize', recalcPageSize)
+})
+
+// 필터/정렬이 바뀌면 1페이지로
+watch([statusFilter, range, sort], () => {
+  page.value = 1
 })
 
 const detail = computed(() => orders.find((o) => o.id === activeId.value) || null)
@@ -183,15 +264,6 @@ function toggleAll() {
   flex-direction: column;
 }
 
-/* 툴바 */
-.ord-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 16px;
-}
-.ord-filters { display: flex; gap: 10px; }
 
 /* 레이아웃 */
 .ord-grid {
@@ -228,6 +300,12 @@ function toggleAll() {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+}
+/* 페이지네이션 푸터 — 카드 하단 고정(본문만 스크롤) */
+.ord-foot {
+  flex-shrink: 0;
+  padding: 10px 10px 4px;
+  border-top: 1px solid var(--line);
 }
 .ord-data {
   height: 56px;
@@ -280,10 +358,8 @@ function toggleAll() {
   .ord-grid { flex-direction: column; }
 }
 
-/* 모바일: 툴바 줄바꿈 + 테이블 핵심 컬럼만(고객·상태·금액) */
+/* 모바일: 테이블 핵심 컬럼만(고객·상태·금액) */
 @media (max-width: 640px) {
-  .ord-toolbar { flex-wrap: wrap; }
-  .ord-filters { flex-wrap: wrap; width: 100%; }
 
   .ord-row {
     grid-template-columns: 1fr auto auto;

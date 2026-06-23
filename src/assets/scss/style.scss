@@ -530,6 +530,13 @@ thead th,
   }
 }
 
+// 하단 설정 버튼 활성(노란 알약 — 메뉴 active와 동일)
+.logout.nav-foot-btn.active,
+.logout.nav-foot-btn.active:hover {
+  background: #f2e24e;
+  color: #1b1b1f;
+}
+
 // ── 메인 ──────────────────────────────────────────────────────────────────
 .main {
   flex: 1;
@@ -3122,26 +3129,50 @@ table.grid {
   .home-brand {
     flex: 0 0 auto;
     .home-logo {
-      height: 38px;
+      height: 36px;
     }
   }
-  // 메뉴 pills를 가운데 라인으로
-  .home-menunav {
-    order: 3;
-    flex: 1 0 100%;
-    display: flex;
-    justify-content: center;
-  }
+  // 우측 아이콘: 브랜드와 같은 줄, 남는 폭 채우되 줄어들 수 있게
   .home-right {
+    flex: 1;
+    min-width: 0;
     gap: 6px;
   }
   // 프로필 텍스트 숨김(홈 우측)
   .home-right .profile-meta {
     display: none;
   }
+  // 메뉴 pills를 다음 줄 전체폭으로 내리고, 폭을 넘으면 가로 스크롤(화면 밖으로 안 나감)
+  .home-menunav {
+    order: 3;
+    flex: 1 0 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+  .home-pills {
+    width: max-content;
+    max-width: 100%;
+    margin: 0 auto;
+    justify-content: flex-start;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .home-pills::-webkit-scrollbar {
+    display: none;
+  }
+  // 하위메뉴 드롭다운: 화면 폭에 맞춤(인라인 left 오버라이드)
+  .home-submenu {
+    left: 0 !important;
+    right: 0;
+    width: auto;
+    min-width: 0;
+    max-width: 100%;
+  }
   .home-title-row {
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 10px 12px;
+    align-items: flex-start;
   }
   .home-title {
     font-size: 22px;
