@@ -70,8 +70,7 @@
 <script setup>
 import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import SidebarMenu from '../SidebarMenu.vue'
-import logo from '../../assets/images/logo.png'
-
+import logo from '../../assets/images/partner/smartscore.svg'
 const props = defineProps({
   groups: { type: Array, required: true },
   activeMenu: { type: String, default: '' },
