@@ -74,10 +74,10 @@
 <script setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import OrderDetailPanel from './OrderDetailPanel.vue'
-import Checkbox from '../components/Checkbox.vue'
-import Select from '../components/Select.vue'
-import FilterBar from '../components/FilterBar.vue'
-import Pagination from '../components/Pagination.vue'
+import Checkbox from '../../components/ui/Checkbox.vue'
+import Select from '../../components/ui/Select.vue'
+import FilterBar from '../../components/data/FilterBar.vue'
+import Pagination from '../../components/data/Pagination.vue'
 
 // 필터/정렬 옵션 (Select 컴포넌트용)
 const statusOptions = [

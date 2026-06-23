@@ -72,8 +72,8 @@
 <script setup>
 import { ref } from 'vue'
 import { useWorkbook } from '../../composables/useWorkbook.js'
-import FileDrop from '../../components/FileDrop.vue'
-import Checkbox from '../../components/Checkbox.vue'
+import FileDrop from '../../components/ui/FileDrop.vue'
+import Checkbox from '../../components/ui/Checkbox.vue'
 import SheetGrid from './SheetGrid.vue'
 import DetailPanel from './DetailPanel.vue'
 

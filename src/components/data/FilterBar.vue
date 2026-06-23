@@ -32,7 +32,7 @@
 
 <script setup>
 import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
-import BottomSheet from './BottomSheet.vue'
+import BottomSheet from '../overlay/BottomSheet.vue'
 
 const props = defineProps({
   title: { type: String, default: '필터' },

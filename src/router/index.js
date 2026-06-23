@@ -1,8 +1,8 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
-import Dashboard from '../views/Dashboard.vue'
+import Dashboard from '../views/dashboard/Dashboard.vue'
 import SheetViewer from '../views/viewer/SheetViewer.vue'
-import HelpContent from '../views/HelpContent.vue'
-import PlaceholderView from '../views/PlaceholderView.vue'
+import HelpContent from '../views/help/HelpContent.vue'
+import PlaceholderView from '../views/common/PlaceholderView.vue'
 
 // meta.home: 사이드바 셸 없이 풀페이지로 렌더 / title: 상단 타이틀 / icon: 플레이스홀더 아이콘
 const routes = [

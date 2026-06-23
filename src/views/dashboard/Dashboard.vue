@@ -345,12 +345,12 @@ import { CanvasRenderer } from 'echarts/renderers'
 import { BarChart, LineChart, PieChart } from 'echarts/charts'
 import { GridComponent, TooltipComponent } from 'echarts/components'
 import VChart from 'vue-echarts'
-import logo from '../assets/images/logo.png'
-import partnerLogo from '../assets/images/partner/smartscore.svg'
-import ToggleSwitch from '../components/ToggleSwitch.vue'
-import NotificationBell from '../components/NotificationBell.vue'
-import Button from '../components/Button.vue'
-import { MENU_TREE } from '../menus.js'
+import logo from '../../assets/images/logo.png'
+import partnerLogo from '../../assets/images/partner/smartscore.svg'
+import ToggleSwitch from '../../components/ui/ToggleSwitch.vue'
+import NotificationBell from '../../components/overlay/NotificationBell.vue'
+import Button from '../../components/ui/Button.vue'
+import { MENU_TREE } from '../../menus.js'
 
 use([CanvasRenderer, BarChart, LineChart, PieChart, GridComponent, TooltipComponent])
 
