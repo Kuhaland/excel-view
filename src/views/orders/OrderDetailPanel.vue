@@ -4,7 +4,7 @@
       <div>
         <div class="od-no">주문 #{{ order.id }}</div>
         <div class="od-sub">
-          <span class="ord-badge" :class="statusClass(order.status)">{{ statusLabel(order.status) }}</span>
+          <Badge :tone="statusTone(order.status)">{{ statusLabel(order.status) }}</Badge>
           <span class="od-date">{{ order.date }} · {{ order.time }}</span>
         </div>
       </div>
@@ -14,7 +14,7 @@
     </div>
 
     <div class="od-cust">
-      <span class="avatar-lg" :style="{ background: order.color }">{{ initial(order.name) }}</span>
+      <Avatar :name="order.name" :color="order.color" :size="72" />
       <div class="od-name">{{ order.name }}</div>
       <div class="od-contacts">
         <button class="od-cc"><span class="material-symbols-outlined">mail</span></button>
@@ -48,6 +48,8 @@
 
 <script setup>
 import Button from '../../components/ui/Button.vue'
+import Badge from '../../components/ui/Badge.vue'
+import Avatar from '../../components/ui/Avatar.vue'
 
 defineProps({
   order: { type: Object, required: true },
@@ -57,11 +59,8 @@ defineEmits(['close'])
 function won(n) {
   return '₩' + n.toLocaleString('ko-KR')
 }
-function initial(name) {
-  return name.charAt(0).toUpperCase()
-}
-function statusClass(s) {
-  return { Paid: 's-paid', Delivered: 's-delivered', Completed: 's-completed' }[s]
+function statusTone(s) {
+  return { Paid: 'gray', Delivered: 'orange', Completed: 'green' }[s]
 }
 function statusLabel(s) {
   return { Paid: '결제완료', Delivered: '배송', Completed: '완료' }[s]
@@ -115,11 +114,6 @@ function statusLabel(s) {
   gap: 10px; padding: 20px 0 18px;
   border-bottom: 1px solid var(--line);
 }
-.avatar-lg {
-  width: 72px; height: 72px; border-radius: 50%;
-  display: inline-flex; align-items: center; justify-content: center;
-  font-size: 28px; font-weight: 700; color: #3a2c00;
-}
 .od-name { font-size: 15px; font-weight: 700; color: var(--text); }
 .od-contacts { display: flex; gap: 10px; }
 .od-cc {
@@ -170,13 +164,4 @@ function statusLabel(s) {
 .od-actions { display: flex; gap: 10px; }
 .od-actions > * { flex: 1; } /* Button 컴포넌트 균등 분배 */
 
-/* 상태 배지 */
-.ord-badge {
-  display: inline-block;
-  font-size: 12px; font-weight: 700;
-  padding: 4px 11px; border-radius: 999px;
-}
-.s-paid { background: #f0efe8; color: #6b6d75; }
-.s-delivered { background: rgba(240, 150, 90, 0.18); color: #c9692e; }
-.s-completed { background: rgba(34, 197, 94, 0.16); color: #16a34a; }
 </style>

@@ -5,7 +5,7 @@
       <div class="detail-head">
         <div>
           <div class="detail-title">셀 {{ cell.address }}</div>
-          <span class="badge badge-paid">{{ colName }}{{ cell.ri + 1 }}행</span>
+          <Badge tone="yellow">{{ colName }}{{ cell.ri + 1 }}행</Badge>
         </div>
         <button class="icon-btn" @click="$emit('clear')" title="닫기">
           <span class="material-symbols-outlined">close</span>
@@ -79,6 +79,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import Badge from '../../components/ui/Badge.vue'
 
 const props = defineProps({
   cell: { type: Object, default: null }, // { ri, ci, address, cell }

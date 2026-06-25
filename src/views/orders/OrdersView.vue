@@ -1,6 +1,6 @@
 <template>
-  <div class="orders">
-    <!-- 필터/정렬 툴바 (공통 FilterBar: 모바일은 필터 버튼 + 바텀시트) -->
+  <div class="page-col">
+    <!-- Filter -->
     <FilterBar title="주문 필터" :count="activeFilterCount" @reset="resetFilters">
       <Select v-model="statusFilter" :options="statusOptions" :style="{ width: '150px' }" />
       <Select v-model="range" :options="rangeOptions" :style="{ width: '170px' }" />
@@ -8,79 +8,81 @@
         <Select v-model="sort" :options="sortOptions" :style="{ width: '130px' }" />
       </template>
     </FilterBar>
-
-    <div class="ord-grid">
-      <!-- 테이블 (공통 .data-table) -->
-      <div class="ord-table data-table card">
-        <!-- 헤더 + 본문을 한 컨테이너로 → 내용이 넓으면 가로 스크롤(헤더 sticky로 함께 스크롤) -->
-        <div ref="bodyRef" class="dt-scroll">
-          <div class="dt-head dt-row">
-            <span class="oc-check">
-              <Checkbox
-                :model-value="allChecked"
-                :indeterminate="someChecked && !allChecked"
-                @change="toggleAll"
-              />
-            </span>
-            <span class="oc-id">주문번호</span>
-            <span class="oc-cust">고객</span>
-            <span class="oc-status">상태</span>
-            <span class="oc-total">금액</span>
-            <span class="oc-date">날짜</span>
-            <span class="oc-more"></span>
-          </div>
-
-          <div
-            v-for="o in pagedOrders"
-            :key="o.id"
-            class="dt-row dt-data clickable"
-            :class="{ active: o.id === activeId }"
-            @click="activeId = o.id"
-          >
-            <span class="oc-check" @click.stop>
-              <Checkbox v-model="selectedIds" :value="o.id" />
-            </span>
-            <span class="oc-id">#{{ o.id }}</span>
-            <span class="oc-cust">
-              <span class="avatar-sm" :style="{ background: o.color }">{{ initial(o.name) }}</span>
-              <span class="cust-name">{{ o.name }}</span>
-            </span>
-            <span class="oc-status">
-              <span class="ord-badge" :class="statusClass(o.status)">{{ statusLabel(o.status) }}</span>
-            </span>
-            <span class="oc-total">{{ won(o.total) }}</span>
-            <span class="oc-date">{{ o.date }}</span>
-            <span class="oc-more">
-              <button class="ord-more-btn" @click.stop aria-label="더보기">
-                <span class="material-symbols-outlined">more_horiz</span>
-              </button>
-            </span>
-          </div>
+    <!-- Table -->
+    <DataTable :rows="viewOrders"
+               :empty-icon="activeFilterCount ? 'search_off' : 'receipt_long'"
+               :empty-title="activeFilterCount ? '조건에 맞는 주문이 없습니다.' : '주문 내역이 없습니다.'"
+               :empty-description="activeFilterCount ? '필터를 변경하거나 초기화해 보세요.' : ''"
+               split
+    >
+      <!-- Header -->
+      <template #head>
+        <div class="dt-head dt-row">
+          <span class="oc-check">
+            <Checkbox :model-value="allChecked"
+                      :indeterminate="someChecked && !allChecked"
+                      @change="toggleAll"
+            />
+          </span>
+          <span class="oc-id">주문번호</span>
+          <span class="oc-cust">고객</span>
+          <span class="oc-status">상태</span>
+          <span class="oc-total">금액</span>
+          <span class="oc-date">날짜</span>
+          <span class="oc-more"></span>
         </div>
-
-        <!-- 페이지네이션(테이블 카드 하단 고정) -->
-        <div class="dt-foot">
-          <Pagination v-model="page" :total="viewOrders.length" :page-size="pageSize" />
+      </template>
+      <!-- Body -->
+      <template #default="{ rows }">
+        <div v-for="o in rows"
+             :key="o.id"
+             class="dt-row dt-data clickable"
+             :class="{ active: o.id === activeId }"
+             @click="activeId = o.id"
+        >
+          <span class="oc-check" @click.stop>
+            <Checkbox v-model="selectedIds" :value="o.id" />
+          </span>
+          <span class="oc-id">#{{ o.id }}</span>
+          <span class="oc-cust cell-media">
+            <Avatar :name="o.name" :color="o.color" :size="28" />
+            <span class="truncate">{{ o.name }}</span>
+          </span>
+          <span class="oc-status">
+            <Badge :tone="statusTone(o.status)">{{ statusLabel(o.status) }}</Badge>
+          </span>
+          <span class="oc-total tnum">{{ won(o.total) }}</span>
+          <span class="oc-date tnum">{{ o.date }}</span>
+          <span class="oc-more">
+            <button class="ghost-icon-btn" @click.stop aria-label="더보기">
+              <span class="material-symbols-outlined">more_horiz</span>
+            </button>
+          </span>
         </div>
-      </div>
-
-      <!-- 상세 패널 (row 클릭 시 우측에서 슬라이드 인 / 닫기 시 우측으로 슬라이드 아웃) -->
-      <Transition name="slide-panel">
+      </template>
+      <!-- No Data -->
+      <template v-if="activeFilterCount" #empty-action>
+        <Button variant="outline" size="sm" icon="restart_alt" @click="resetFilters">필터 초기화</Button>
+      </template>
+      <!-- Slide Panel -->
+      <template #panel>
         <OrderDetailPanel v-if="detail" :order="detail" @close="activeId = null" />
-      </Transition>
-    </div>
+      </template>
+    </DataTable>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { ref, computed } from 'vue'
 import OrderDetailPanel from './OrderDetailPanel.vue'
 import Checkbox from '../../components/ui/Checkbox.vue'
 import Select from '../../components/ui/Select.vue'
+import Button from '../../components/ui/Button.vue'
+import Badge from '../../components/ui/Badge.vue'
+import Avatar from '../../components/ui/Avatar.vue'
 import FilterBar from '../../components/data/FilterBar.vue'
-import Pagination from '../../components/data/Pagination.vue'
+import DataTable from '../../components/data/DataTable.vue'
 
-// 필터/정렬 옵션 (Select 컴포넌트용)
 const statusOptions = [
   { label: '전체 상태', value: 'all' },
   { label: '결제완료', value: 'Paid' },
@@ -101,11 +103,8 @@ const sortOptions = [
 function won(n) {
   return '₩' + n.toLocaleString('ko-KR')
 }
-function initial(name) {
-  return name.charAt(0).toUpperCase()
-}
-function statusClass(s) {
-  return { Paid: 's-paid', Delivered: 's-delivered', Completed: 's-completed' }[s]
+function statusTone(s) {
+  return { Paid: 'gray', Delivered: 'orange', Completed: 'green' }[s]
 }
 function statusLabel(s) {
   return { Paid: '결제완료', Delivered: '배송', Completed: '완료' }[s]
@@ -113,7 +112,6 @@ function statusLabel(s) {
 
 const AVA = ['#f6b48f', '#a3c4f3', '#9ee0bd', '#f7bdd8', '#c9bdf2', '#f5cf7a', '#9ad7d0']
 
-// 상품 풀
 const P = [
   { name: 'Ryobi ONE 드릴/드라이버', price: 409000, icon: 'handyman' },
   { name: 'Socket Systeme Electric', price: 238000, icon: 'power' },
@@ -125,7 +123,6 @@ const P = [
   { name: '디월트 레이저 측정기', price: 96000, icon: 'straighten' },
 ]
 
-// 주문 목록(임시) — total은 items 합계로 계산
 const NAMES = [
   'Michelle Black', 'Janice Chandler', 'Mildred Hall', 'Ana Carter', 'John Sherman',
   'James Miller', 'Travis French', 'Ralph Hall', 'Gary Gilbert', 'Frances Howell',
@@ -145,15 +142,13 @@ const usedIds = new Set()
 function uniqueId() {
   let id
   do {
-    id = String(100000 + randInt(900000)) // 6자리
+    id = String(100000 + randInt(900000))
   } while (usedIds.has(id))
   usedIds.add(id)
   return id
 }
 
-// 무작위 100건 생성
 const RAW = Array.from({ length: 100 }, () => {
-  // 상품 1~4개 무작위(중복 없이)
   const pool = [...Array(P.length).keys()]
   const count = 1 + randInt(Math.min(4, pool.length))
   const it = []
@@ -182,7 +177,6 @@ const statusFilter = ref('all')
 const range = ref('all')
 const sort = ref('date')
 
-// 적용된 필터 개수(모바일 필터 버튼 배지) — 정렬은 제외
 const activeFilterCount = computed(
   () => (statusFilter.value !== 'all' ? 1 : 0) + (range.value !== 'all' ? 1 : 0)
 )
@@ -190,8 +184,8 @@ function resetFilters() {
   statusFilter.value = 'all'
   range.value = 'all'
 }
-const activeId = ref(null) // row 클릭 시 상세 패널 활성
-const selectedIds = ref([]) // Checkbox 배열 v-model
+const activeId = ref(null)
+const selectedIds = ref([])
 
 const viewOrders = computed(() => {
   let list = orders
@@ -203,49 +197,8 @@ const viewOrders = computed(() => {
   return list
 })
 
-// 페이징 — 페이지당 행 수는 스크롤 영역(헤더 제외) 높이에 맞춰 동적 계산
-const ROW_H = 56 // .dt-data 행 높이(px)
-const bodyRef = ref(null)
-const page = ref(1)
-const pageSize = ref(1)
-const pagedOrders = computed(() => {
-  const start = (page.value - 1) * pageSize.value
-  return viewOrders.value.slice(start, start + pageSize.value)
-})
-
-// (스크롤 영역 높이 - 헤더) ÷ 행 높이 = 한 페이지에 들어갈 행 수
-function recalcPageSize() {
-  const el = bodyRef.value
-  if (!el) return
-  const headH = el.querySelector('.dt-head')?.offsetHeight || 40
-  const rowH = el.querySelector('.dt-data')?.offsetHeight || ROW_H
-  const fit = Math.floor((el.clientHeight - headH) / rowH)
-  pageSize.value = Math.max(1, fit)
-}
-
-let ro = null
-onMounted(() => {
-  nextTick(recalcPageSize)
-  if (typeof ResizeObserver !== 'undefined' && bodyRef.value) {
-    ro = new ResizeObserver(recalcPageSize)
-    ro.observe(bodyRef.value)
-  } else {
-    window.addEventListener('resize', recalcPageSize)
-  }
-})
-onBeforeUnmount(() => {
-  if (ro) ro.disconnect()
-  else window.removeEventListener('resize', recalcPageSize)
-})
-
-// 필터/정렬이 바뀌면 1페이지로
-watch([statusFilter, range, sort], () => {
-  page.value = 1
-})
-
 const detail = computed(() => orders.find((o) => o.id === activeId.value) || null)
 
-// 전체 선택(현재 보이는 목록 기준) + indeterminate
 const viewIds = computed(() => viewOrders.value.map((o) => o.id))
 const allChecked = computed(() => viewIds.value.length > 0 && viewIds.value.every((id) => selectedIds.value.includes(id)))
 const someChecked = computed(() => viewIds.value.some((id) => selectedIds.value.includes(id)))
@@ -258,77 +211,22 @@ function toggleAll() {
 }
 </script>
 
-<style scoped>
-/* 공통 테이블 구조/스크롤/페이지네이션은 전역 .data-table 계열에서 처리.
-   여기서는 이 페이지의 컬럼 정의·셀·배지·반응형만 지정한다. */
-.orders {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-/* 레이아웃 (테이블 + 상세 패널) */
-.ord-grid {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  gap: 16px;
-}
-
-/* 컬럼 정의 + 가로 스크롤 임계 너비 */
+<style lang="scss" scoped>
 .dt-row {
   grid-template-columns: 40px 96px minmax(180px, 1.4fr) 110px 120px 80px 40px;
   min-width: 720px;
 }
-.dt-data { height: 56px; } /* 이 페이지 행 높이 */
 
-/* 체크박스 셀 정렬 (체크박스는 Checkbox 컴포넌트) */
 .oc-check :deep(.base-checkbox) { padding: 0; }
-
-/* 셀 */
-.oc-cust { display: flex; align-items: center; gap: 9px; min-width: 0; }
-.cust-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.oc-total { font-weight: 600; font-variant-numeric: tabular-nums; }
-.oc-date { color: var(--muted); font-variant-numeric: tabular-nums; }
+.oc-total { font-weight: 600; }
+.oc-date { color: var(--muted); }
 .oc-more { display: flex; justify-content: flex-end; }
-.ord-more-btn {
-  display: inline-flex;
-  width: 28px; height: 28px;
-  align-items: center; justify-content: center;
-  border: 0; border-radius: 8px; background: transparent;
-  color: var(--muted); cursor: pointer;
-}
-.ord-more-btn:hover { background: rgba(0, 0, 0, 0.05); color: var(--text); }
 
-.avatar-sm {
-  flex-shrink: 0;
-  width: 28px; height: 28px;
-  border-radius: 50%;
-  display: inline-flex; align-items: center; justify-content: center;
-  font-size: 12px; font-weight: 700; color: #3a2c00;
-}
-
-/* 상태 배지 */
-.ord-badge {
-  display: inline-block;
-  font-size: 12px; font-weight: 700;
-  padding: 4px 11px; border-radius: 999px;
-}
-.s-paid { background: #f0efe8; color: #6b6d75; }
-.s-delivered { background: rgba(240, 150, 90, 0.18); color: #c9692e; }
-.s-completed { background: rgba(34, 197, 94, 0.16); color: #16a34a; }
-
-@media (max-width: 1000px) {
-  .ord-grid { flex-direction: column; }
-}
-
-/* 모바일: 테이블 핵심 컬럼만(고객·상태·금액) */
 @media (max-width: 640px) {
   .dt-row {
     grid-template-columns: 1fr auto auto;
     gap: 10px;
-    min-width: 0; /* 모바일은 핵심 컬럼만 → 가로 스크롤 없이 맞춤 */
+    min-width: 0;
   }
   .oc-check,
   .oc-id,

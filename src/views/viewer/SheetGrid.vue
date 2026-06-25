@@ -1,6 +1,6 @@
 <template>
   <div class="sheet-box">
-    <div v-if="rows.length === 0" class="empty">빈 시트입니다.</div>
+    <NoData v-if="rows.length === 0" icon="grid_off" title="빈 시트입니다." />
     <table v-else class="grid">
       <thead>
         <tr>
@@ -33,7 +33,9 @@
         </tr>
         <tr v-if="!displayRows.length">
           <td class="row-num"></td>
-          <td :colspan="colCount" class="empty">검색 결과가 없습니다.</td>
+          <td :colspan="colCount">
+            <NoData size="sm" icon="search_off" title="검색 결과가 없습니다." />
+          </td>
         </tr>
       </tbody>
     </table>
@@ -42,6 +44,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import NoData from '../../components/data/NoData.vue'
 
 const props = defineProps({
   rows: { type: Array, required: true },

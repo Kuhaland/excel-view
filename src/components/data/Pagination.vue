@@ -49,10 +49,10 @@
 import { computed, watch } from 'vue'
 
 const props = defineProps({
-  modelValue: { type: Number, default: 1 }, // 현재 페이지(1-based)
-  total: { type: Number, required: true }, // 전체 항목 수
+  modelValue: { type: Number, default: 1 },
+  total: { type: Number, required: true },
   pageSize: { type: Number, default: 10 },
-  siblingCount: { type: Number, default: 1 }, // 현재 페이지 좌우 표시 개수
+  siblingCount: { type: Number, default: 1 },
 })
 const emit = defineEmits(['update:modelValue'])
 
@@ -62,7 +62,6 @@ const current = computed(() => Math.min(Math.max(1, props.modelValue), pageCount
 const rangeStart = computed(() => (props.total === 0 ? 0 : (current.value - 1) * props.pageSize + 1))
 const rangeEnd = computed(() => Math.min(current.value * props.pageSize, props.total))
 
-// 페이지 번호 목록(양끝 + 말줄임)
 const pages = computed(() => {
   const last = pageCount.value
   const cur = current.value
