@@ -14,7 +14,7 @@
             </button>
           </header>
 
-          <div class="sheet-body">
+          <div class="sheet-body" v-os="{ options: { overflow: { x: 'hidden' } } }">
             <slot />
           </div>
 

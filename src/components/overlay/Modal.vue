@@ -18,7 +18,7 @@
             </button>
           </header>
 
-          <div class="modal-body">
+          <div class="modal-body" v-os="{ options: { overflow: { x: 'hidden' } } }">
             <slot />
           </div>
 

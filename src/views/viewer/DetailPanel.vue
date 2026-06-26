@@ -1,5 +1,5 @@
 <template>
-  <aside class="detail">
+  <aside class="detail" v-os="{ options: { overflow: { x: 'hidden' } } }">
     <!-- 셀 선택됨 -->
     <template v-if="cell">
       <div class="detail-head">
@@ -14,7 +14,7 @@
 
       <div class="detail-value">
         <div class="detail-label">값</div>
-        <div class="value-box">{{ displayValue || '(빈 셀)' }}</div>
+        <div class="value-box" v-os>{{ displayValue || '(빈 셀)' }}</div>
       </div>
 
       <div class="detail-section-title">서식</div>

@@ -5,7 +5,7 @@
     <!-- Table card -->
     <div class="data-table card">
       <!-- Content -->
-      <div ref="bodyRef" class="dt-scroll">
+      <div ref="bodyRef" class="dt-scroll" v-os>
         <!-- Header -->
         <slot name="head" />
         <!-- Body -->

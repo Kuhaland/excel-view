@@ -29,6 +29,7 @@
 
     <ul
       v-show="open"
+      v-os="{ options: { overflow: { x: 'hidden' } } }"
       :id="listId"
       ref="listRef"
       class="sel-list"
@@ -210,6 +211,8 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocClick))
   text-overflow: ellipsis;
 }
 .sel-value.placeholder {
+  align-items: flex-start;
+  border: 0;
   color: #b8bac0;
 }
 

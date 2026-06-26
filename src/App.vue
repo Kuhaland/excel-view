@@ -119,6 +119,9 @@
         <!-- 수정 이력 로그 (테이블) -->
         <ChangeLogView v-else-if="activeMenu === 'sys-log'" />
 
+        <!-- 테이블·좌석 설정 (Konva 캔버스 에디터) -->
+        <TableLayoutView v-else-if="activeMenu === 'store-table'" />
+
         <!-- 그 외 메뉴: 준비 중 -->
         <div v-else class="placeholder">
           <span class="material-symbols-outlined">{{ activeMenuIcon }}</span>
@@ -156,6 +159,7 @@ import Sidebar from './components/layout/Sidebar.vue'
 import Dashboard from './views/dashboard/Dashboard.vue'
 import OrdersView from './views/orders/OrdersView.vue'
 import ChangeLogView from './views/system/ChangeLogView.vue'
+import TableLayoutView from './views/store/TableLayoutView.vue'
 import HelpContent from './views/help/HelpContent.vue'
 import Modal from './components/overlay/Modal.vue'
 import NotificationBell from './components/overlay/NotificationBell.vue'

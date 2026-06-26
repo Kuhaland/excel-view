@@ -1,5 +1,5 @@
 <template>
-  <div class="home" :class="isDark ? 'theme-dark' : 'theme-light'">
+  <div class="home" :class="isDark ? 'theme-dark' : 'theme-light'" v-os="{ options: { overflow: { x: 'hidden' } } }">
     <!-- 하단 앰비언트 블러 서클(천천히 크로스 이동) -->
     <div class="home-blobs" aria-hidden="true">
       <span class="blob b1"></span><span class="blob b2"></span>

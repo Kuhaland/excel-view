@@ -20,7 +20,7 @@
     </div>
 
     <!-- 메인 카테고리(아이콘 + 아코디언) → 하위 항목(텍스트) -->
-    <nav class="menu-wrap">
+    <nav class="menu-wrap" v-os="{ options: { overflow: { x: 'hidden' } } }">
       <div
         v-for="g in groups"
         :key="g.id"
@@ -48,21 +48,23 @@
       </div>
     </nav>
 
-    <!-- 하단 고정: 설정 / 로그아웃 -->
-    <button
-      type="button"
-      class="logout nav-foot-btn"
-      :class="{ active: activeMenu === 'settings' }"
-      title="설정"
-      @click="onSelect('settings')"
-    >
-      <span class="material-symbols-outlined">settings</span>
-      <span class="logout-text">설정</span>
-    </button>
-    <button type="button" class="logout" title="로그아웃" @click="$emit('close')">
-      <span class="material-symbols-outlined">logout</span>
-      <span class="logout-text">로그아웃</span>
-    </button>
+    <!-- 하단 고정: 설정 / 로그아웃 (가로 정렬) -->
+    <div class="nav-foot">
+      <button
+        type="button"
+        class="logout nav-foot-btn"
+        :class="{ active: activeMenu === 'settings' }"
+        title="설정"
+        @click="onSelect('settings')"
+      >
+        <span class="material-symbols-outlined">settings</span>
+        <span class="logout-text">설정</span>
+      </button>
+      <button type="button" class="logout" title="로그아웃" @click="$emit('close')">
+        <span class="material-symbols-outlined">logout</span>
+        <span class="logout-text">로그아웃</span>
+      </button>
+    </div>
 
     <!-- 접힘 상태 hover 툴팁 (좌→우 슬라이드) -->
     <Transition name="nav-tip">

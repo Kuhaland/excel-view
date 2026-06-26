@@ -1,5 +1,5 @@
 <template>
-  <div class="sheet-box">
+  <div class="sheet-box" v-os>
     <NoData v-if="rows.length === 0" icon="grid_off" title="빈 시트입니다." />
     <table v-else class="grid">
       <thead>

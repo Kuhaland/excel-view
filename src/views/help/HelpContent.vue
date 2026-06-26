@@ -1,5 +1,5 @@
 <template>
-  <div class="help">
+  <div class="help" v-os="{ options: { overflow: { x: 'hidden' } } }">
     <div class="help-head">
       <span class="material-symbols-outlined">help</span>
       <div>

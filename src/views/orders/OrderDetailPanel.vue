@@ -1,5 +1,5 @@
 <template>
-  <aside class="ord-detail card">
+  <aside class="ord-detail card" v-os="{ options: { overflow: { x: 'hidden' } } }">
     <div class="od-top">
       <div>
         <div class="od-no">주문 #{{ order.id }}</div>
@@ -24,7 +24,7 @@
     </div>
 
     <div class="od-items-title">주문 상품</div>
-    <ul class="od-items">
+    <ul class="od-items" v-os="{ options: { overflow: { x: 'hidden' } } }">
       <li v-for="(it, i) in order.items" :key="i">
         <span class="od-thumb material-symbols-outlined">{{ it.icon }}</span>
         <div class="od-it-info">

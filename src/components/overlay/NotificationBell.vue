@@ -19,7 +19,7 @@
           <span class="noti-headcount">{{ items.length }}</span>
         </div>
 
-        <ul class="noti-list">
+        <ul class="noti-list" v-os="{ options: { overflow: { x: 'hidden' } } }">
           <li v-for="n in visible" :key="n.id" class="noti-item" :class="{ unread: n.unread }">
             <span class="noti-ic material-symbols-outlined" :class="'t-' + n.type">{{ ICONS[n.type] || 'info' }}</span>
             <div class="noti-body">

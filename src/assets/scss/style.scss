@@ -258,6 +258,10 @@ thead th,
   .collapse-btn {
     margin-left: 0;
   }
+  .nav-foot {
+    flex-direction: column;
+    gap: 4px;
+  }
   .logout {
     justify-content: center;
     gap: 0;
@@ -567,6 +571,21 @@ thead th,
       background: #f2e24e;
       color: #1b1b1f;
     }
+  }
+}
+
+// 하단 푸터: 설정 / 로그아웃 가로 정렬
+.nav-foot {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+
+  .logout {
+    flex: 1;
+    min-width: 0;
+    width: auto;
+    margin-top: 0;
+    justify-content: center;
   }
 }
 
@@ -3180,4 +3199,13 @@ table.grid {
   .kpi-row {
     grid-template-columns: 1fr;
   }
+}
+
+// ── OverlayScrollbars ───────────────────────────────────────────────────────
+// 다크 테마 대시보드에서는 어두운 핸들이 묻히므로 밝은 핸들로 전환.
+// (.theme-dark 클래스가 토글되면 자동 반영)
+.home.theme-dark.os-theme-dark {
+  --os-handle-bg: rgba(255, 255, 255, 0.42);
+  --os-handle-bg-hover: rgba(255, 255, 255, 0.58);
+  --os-handle-bg-active: rgba(255, 255, 255, 0.72);
 }
