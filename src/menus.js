@@ -10,7 +10,6 @@ export const MENU_TREE = [
     id: 'orders', title: '주문·영업 관리', icon: 'receipt_long',
     items: [
       { id: 'ord-list', label: '주문 내역', icon: 'list_alt'},
-      { id: 'ord-refund', label: '환불·취소 기록', icon: 'undo'},
       { id: 'ord-reserve', label: '예약 관리', icon: 'event'},
     ],
   },
@@ -87,7 +86,6 @@ export const MENU_TREE = [
       { id: 'store-info', label: '매장 기본 정보', icon: 'info' },
       { id: 'store-status', label: '영업 상태', icon: 'toggle_on' },
       { id: 'store-table', label: '테이블·좌석 설정', icon: 'table_bar' },
-      { id: 'store-device', label: '기기 연동', icon: 'devices' },
     ],
   },
   {

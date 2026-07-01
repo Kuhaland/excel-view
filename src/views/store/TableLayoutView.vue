@@ -1,22 +1,29 @@
 <template>
   <div class="page-col seat-editor">
-    <!-- 툴바 -->
-    <div class="seat-toolbar card">
-      <div class="tb-group tb-stats">
-        <span class="tb-stat"><b>{{ tableCount }}</b> 테이블</span>
-        <span class="tb-stat"><b>{{ totalSeats }}</b> 좌석</span>
-        <span class="tb-stat"><b>{{ fixtureCount }}</b> 기타</span>
+    <!-- 툴바: 배치 추가 / 저장·관리 두 섹션으로 구분 -->
+    <div class="seat-toolbar">
+      <div class="tb-panel">
+        <span class="tb-label">배치 추가</span>
+        <div class="tb-group">
+          <Button variant="dark" icon="add_circle" :disabled="editMode" @click="addTable('round')">원형 테이블</Button>
+          <Button variant="dark" icon="add_box" :disabled="editMode" @click="addTable('rect')">사각 테이블</Button>
+          <Select
+            v-model="fixturePick"
+            :options="fixtureOptions"
+            placeholder="인테리어"
+            :disabled="editMode"
+          />
+          <Button variant="outline" icon="edit_note" :disabled="editMode" @click="openFixtureManager">목록 관리</Button>
+        </div>
       </div>
-      <div class="tb-group">
-        <Button variant="dark" icon="add_circle" :disabled="editMode" @click="addTable('round')">원형 테이블</Button>
-        <Button variant="dark" icon="add_box" :disabled="editMode" @click="addTable('rect')">사각 테이블</Button>
-        <Select
-          v-model="fixturePick"
-          :options="fixtureOptions"
-          placeholder="선택"
-          :disabled="editMode"
-        />
-        <Button variant="outline" icon="restart_alt" :disabled="editMode" @click="resetLayout">초기화</Button>
+
+      <div class="tb-panel tb-panel-save">
+        <span class="tb-label">저장 · 관리</span>
+        <div class="tb-group">
+          <Button variant="dark" icon="save" :disabled="editMode" @click="saveLayout">저장</Button>
+          <Button variant="outline" icon="folder_open" :disabled="editMode || !hasSaved" @click="loadLayout">불러오기</Button>
+          <Button variant="outline" icon="restart_alt" :disabled="editMode || !tables.length" @click="resetLayout">리셋</Button>
+        </div>
       </div>
     </div>
 
@@ -51,6 +58,22 @@
           <span class="material-symbols-outlined">event_seat</span>
           <span>좌석 목록</span>
           <span v-if="tables.length" class="sp-badge">{{ tables.length }}</span>
+        </div>
+
+        <!-- 카운트 요약 (좌석 목록 상단) -->
+        <div class="sp-stats">
+          <div class="sp-stat">
+            <span class="sp-stat-num">{{ tableCount }}</span>
+            <span class="sp-stat-lab">테이블</span>
+          </div>
+          <div class="sp-stat">
+            <span class="sp-stat-num">{{ totalSeats }}</span>
+            <span class="sp-stat-lab">좌석</span>
+          </div>
+          <div class="sp-stat">
+            <span class="sp-stat-num">{{ fixtureCount }}</span>
+            <span class="sp-stat-lab">기타</span>
+          </div>
         </div>
 
         <!-- 목록 (보기/수정 모드) -->
@@ -120,6 +143,71 @@
         </div>
       </aside>
     </div>
+
+    <!-- 리셋 확인 모달 -->
+    <Modal v-model="confirmReset" title="배치 리셋" width="420px">
+      <p class="reset-msg">
+        현재 배치를 모두 비웁니다.<br />
+        저장하지 않은 변경 사항은 사라집니다. 계속할까요?
+      </p>
+      <template #footer>
+        <Button variant="outline" @click="confirmReset = false">취소</Button>
+        <Button variant="dark" icon="restart_alt" @click="doReset">비우기</Button>
+      </template>
+    </Modal>
+
+    <!-- 인테리어 목록 관리 -->
+    <Modal v-model="fixtureModal" title="인테리어 목록 관리" width="480px">
+      <div class="fx-manager">
+        <div class="fx-toolbar">
+          <Checkbox
+            :model-value="allFxChecked"
+            :indeterminate="someFxChecked && !allFxChecked"
+            :disabled="!fixtureDraft.length"
+            @change="toggleAllFx"
+          >전체 선택</Checkbox>
+          <div class="fx-tb-right">
+            <Button variant="outline" icon="delete" :disabled="!fixtureChecked.length" @click="deleteCheckedFixtures">선택 삭제</Button>
+            <Button variant="dark" icon="add" @click="addFixtureRow">추가</Button>
+          </div>
+        </div>
+
+        <ul v-if="fixtureDraft.length" class="fx-list">
+          <li v-for="f in fixtureDraft" :key="f.key" class="fx-row" :class="{ checked: fixtureChecked.includes(f.key), invalid: fxError && !String(f.label || '').trim() }">
+            <Checkbox v-model="fixtureChecked" :value="f.key" />
+            <div class="fx-fields">
+              <div class="fx-line">
+                <span class="sr-dot fx-dot" :style="{ background: f.color }"></span>
+                <Input v-model="f.label" placeholder="영역 이름" maxlength="12" />
+              </div>
+              <div class="se-colors">
+                <button
+                  v-for="c in SWATCHES"
+                  :key="c"
+                  type="button"
+                  class="sw"
+                  :class="{ on: f.color === c }"
+                  :style="{ background: c }"
+                  @click="f.color = c"
+                />
+              </div>
+            </div>
+          </li>
+        </ul>
+        <div v-else class="fx-empty">
+          <span class="material-symbols-outlined">dashboard_customize</span>
+          <p>목록이 비어 있습니다. <b>추가</b>로 새 영역을 만드세요.</p>
+        </div>
+      </div>
+
+      <template #footer>
+        <Button variant="outline" @click="fixtureModal = false">취소</Button>
+        <Button variant="primary" icon="save" @click="saveFixtures">저장</Button>
+      </template>
+    </Modal>
+
+    <!-- 안내 토스트 -->
+    <Toast v-model="toastShow" :message="toastMsg" />
   </div>
 </template>
 
@@ -129,20 +217,24 @@ import Konva from 'konva'
 import Button from '../../components/ui/Button.vue'
 import Input from '../../components/ui/Input.vue'
 import Select from '../../components/ui/Select.vue'
+import Checkbox from '../../components/ui/Checkbox.vue'
+import Modal from '../../components/overlay/Modal.vue'
+import Toast from '../../components/overlay/Toast.vue'
 
 const GRID = 20
 const STORE_KEY = 'seat-layout-v1'
 const PALETTE = ['#f6b48f', '#a3c4f3', '#9ee0bd', '#f7bdd8', '#c9bdf2', '#f5cf7a', '#9ad7d0']
 const MIN = 56
 
-// 좌석 없는 인테리어 프리셋(쇼파·카운터·샐러드바·기타 영역)
-const FIXTURES = [
+// 좌석 없는 인테리어 프리셋(쇼파·카운터·샐러드바·기타 영역) — 목록 관리로 편집 가능
+const FX_KEY = 'seat-fixtures-v1'
+const fixtures = ref([
   { key: 'sofa', label: '쇼파', icon: 'weekend', w: 150, h: 70, color: '#d8cfc0' },
   { key: 'counter', label: '카운터', icon: 'point_of_sale', w: 170, h: 54, color: '#cbb693' },
   { key: 'salad', label: '샐러드바', icon: 'local_dining', w: 120, h: 84, color: '#bcd6ad' },
   { key: 'etc', label: '기타 영역', icon: 'dashboard', w: 110, h: 90, color: '#cfd3d9' },
-]
-const fixtureOptions = FIXTURES.map((f) => ({ label: f.label, value: f.key }))
+])
+const fixtureOptions = computed(() => fixtures.value.map((f) => ({ label: f.label, value: f.key })))
 // 색상 스와치: 테이블용 파스텔 + 인테리어용 뉴트럴
 const SWATCHES = [...PALETTE, '#d8cfc0', '#cbb693', '#bcd6ad', '#cfd3d9']
 
@@ -171,6 +263,16 @@ const fixturePick = ref('')
 const editMode = ref(false)
 const draft = ref([]) // 수정 모드용 복사본
 const displayList = computed(() => (editMode.value ? draft.value : tables.value))
+
+// 저장/불러오기 상태
+const hasSaved = ref(false) // 저장된 배치 스냅샷 존재 여부(불러오기 활성화 조건)
+// 안내 토스트(Toast 컴포넌트로 표시) — 문구를 바꾸며 다시 띄운다
+const toastShow = ref(false)
+const toastMsg = ref('')
+function flash(msg) {
+  toastMsg.value = msg
+  toastShow.value = true
+}
 
 let uid = 1
 const nextId = () => `t${uid++}`
@@ -348,7 +450,7 @@ function addTable(type) {
 // 좌석 없는 인테리어 영역 추가
 function addFixture(key) {
   if (!key) return
-  const preset = FIXTURES.find((f) => f.key === key)
+  const preset = fixtures.value.find((f) => f.key === key)
   if (!preset) return
   const { x, y } = centerXY()
   const t = {
@@ -373,6 +475,59 @@ function addFixture(key) {
 
 // Select에서 인테리어 종류를 고르면 해당 영역 추가(선택값은 표시 유지)
 watch(fixturePick, (key) => { if (key) addFixture(key) })
+
+// ── 인테리어 목록 관리(팝업) ────────────────────────────────────────────────
+const fixtureModal = ref(false)
+const fixtureDraft = ref([])   // 편집용 복사본
+const fixtureChecked = ref([]) // 체크된 항목의 key 목록(삭제 대상)
+const fxError = ref(false)     // 저장 시 이름 누락 유효성 오류 표시
+let fxSeq = 1
+
+function loadFixtures() {
+  try {
+    const raw = localStorage.getItem(FX_KEY)
+    if (!raw) return
+    const data = JSON.parse(raw)
+    if (Array.isArray(data) && data.length) fixtures.value = data
+  } catch { /* 무시 */ }
+}
+function openFixtureManager() {
+  fixtureDraft.value = fixtures.value.map((f) => ({ ...f }))
+  fixtureChecked.value = []
+  fxError.value = false
+  fixtureModal.value = true
+}
+function addFixtureRow() {
+  fixtureDraft.value.push({ key: `fx${fxSeq++}`, label: '', icon: 'dashboard', w: 110, h: 90, color: '#cfd3d9' })
+}
+function deleteCheckedFixtures() {
+  if (!fixtureChecked.value.length) return
+  const del = new Set(fixtureChecked.value)
+  fixtureDraft.value = fixtureDraft.value.filter((f) => !del.has(f.key))
+  fixtureChecked.value = []
+}
+// 전체 선택 체크박스
+const allFxChecked = computed(() => fixtureDraft.value.length > 0 && fixtureChecked.value.length === fixtureDraft.value.length)
+const someFxChecked = computed(() => fixtureChecked.value.length > 0)
+function toggleAllFx() {
+  fixtureChecked.value = allFxChecked.value ? [] : fixtureDraft.value.map((f) => f.key)
+}
+function saveFixtures() {
+  // 유효성: 이름(타이틀)이 없는 항목이 있으면 저장 중단하고 알림
+  if (fixtureDraft.value.some((f) => !String(f.label || '').trim())) {
+    fxError.value = true
+    flash('이름이 없는 항목이 있습니다. 이름을 입력해 주세요.')
+    return
+  }
+  fxError.value = false
+  const cleaned = fixtureDraft.value.map((f) => ({ ...f, label: f.label.trim() }))
+  fixtures.value = cleaned
+  try { localStorage.setItem(FX_KEY, JSON.stringify(cleaned)) } catch { /* 무시 */ }
+  // 현재 Select 선택값이 삭제됐다면 초기화
+  if (fixturePick.value && !cleaned.some((f) => f.key === fixturePick.value)) fixturePick.value = ''
+  fixtureModal.value = false
+  flash('인테리어 목록을 저장했습니다')
+}
 
 function selectTable(id) {
   selectedId.value = id
@@ -465,15 +620,30 @@ function saveEditMode() {
   renderTables()
 }
 
+// 리셋: 확인 모달을 띄움
+const confirmReset = ref(false)
 function resetLayout() {
-  seedDefault()
+  if (!tables.value.length) return
+  confirmReset.value = true
+}
+// 캔버스를 비움(저장된 스냅샷은 그대로 두어 불러오기로 복구 가능)
+function doReset() {
+  confirmReset.value = false
+  cancelEdit()
+  if (editMode.value) cancelEditMode()
+  tables.value = []
   selectedId.value = null
+  uid = 1
   renderTables()
+  flash('배치를 비웠습니다')
 }
 
-// ── 저장/복원 ───────────────────────────────────────────────────────────────
+// ── 저장 / 불러오기 / 복원 ───────────────────────────────────────────────────
 function save() {
-  try { localStorage.setItem(STORE_KEY, JSON.stringify(tables.value)) } catch { /* 무시 */ }
+  try {
+    localStorage.setItem(STORE_KEY, JSON.stringify(tables.value))
+    return true
+  } catch { return false }
 }
 function load() {
   try {
@@ -486,7 +656,28 @@ function load() {
     return true
   } catch { return false }
 }
-watch(tables, save, { deep: true })
+function savedExists() {
+  try { return !!localStorage.getItem(STORE_KEY) } catch { return false }
+}
+
+// 현재 배치를 저장(수동)
+function saveLayout() {
+  cancelEdit()
+  if (save()) { hasSaved.value = true; flash('현재 배치를 저장했습니다') }
+  else flash('저장에 실패했습니다')
+}
+// 저장된 배치를 리스트/캔버스로 불러오기
+function loadLayout() {
+  cancelEdit()
+  if (editMode.value) cancelEditMode()
+  if (load()) {
+    selectedId.value = null
+    renderTables()
+    flash('저장된 배치를 불러왔습니다')
+  } else {
+    flash('저장된 배치가 없습니다')
+  }
+}
 
 // ── 마운트 ──────────────────────────────────────────────────────────────────
 function fitStage() {
@@ -497,7 +688,9 @@ function fitStage() {
 }
 
 onMounted(() => {
+  loadFixtures()
   if (!load()) seedDefault()
+  hasSaved.value = savedExists()
 
   stage = new Konva.Stage({
     container: stageBox.value,
@@ -553,25 +746,72 @@ onBeforeUnmount(() => {
 <style lang="scss" scoped>
 .seat-editor { gap: 14px; }
 
-/* 툴바 */
+/* 툴바: 배치 추가 / 저장·관리 섹션 구분 */
 .seat-toolbar {
   flex-shrink: 0;
   display: flex;
-  align-items: center;
+  align-items: stretch;
   justify-content: space-between;
   gap: 12px;
-  padding: 12px 14px;
   flex-wrap: wrap;
-  /* .card 의 overflow:hidden 이 Select 드롭다운을 자르지 않도록 해제 +
-     드롭다운이 아래 캔버스 위에 확실히 뜨도록 stacking context 부여 */
-  overflow: visible;
+  /* 드롭다운이 아래 캔버스 위에 확실히 뜨도록 stacking context 부여 */
   position: relative;
   z-index: 5;
 }
-.tb-group { display: flex; align-items: center; gap: 8px; }
-.tb-stats { gap: 16px; }
-.tb-stat { font-size: 14px; color: var(--muted); }
-.tb-stat b { font-size: 17px; font-weight: 800; color: var(--text); margin-right: 2px; }
+.tb-panel {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 14px 12px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: visible; /* Select 드롭다운이 잘리지 않도록 */
+}
+.tb-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+/* 저장·관리 섹션은 톤을 달리해 배치(추가) 영역과 시각적으로 구분 */
+.tb-panel-save {
+  flex: 0 0 320px; /* .tb-panel의 flex:1 상속을 끄고 320px 고정 → 하단 좌석 패널과 정렬 */
+  width: 320px;
+  background: #faf6e8;
+  border-color: #ece0bb;
+}
+.tb-panel-save .tb-label { color: #8a7420; }
+.tb-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+/* 리셋 확인 모달 */
+.reset-msg { margin: 0; font-size: 14px; line-height: 1.6; color: var(--text); }
+
+/* 인테리어 목록 관리 모달 */
+.fx-manager { display: flex; flex-direction: column; gap: 12px; }
+.fx-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.fx-tb-right { display: flex; align-items: center; gap: 8px; }
+.fx-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.fx-row {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--card);
+  &.checked { border-color: var(--ink); background: #fafafa; }
+  &.invalid { border-color: #e5484d; background: #fdf3f3; }
+  &.invalid :deep(.ui-input) { border-color: #e5484d; }
+  :deep(.base-checkbox) { margin-top: 3px; }
+}
+.fx-fields { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.fx-line { display: flex; align-items: center; gap: 8px; }
+.fx-dot { flex-shrink: 0; width: 16px; height: 16px; border-radius: 5px; }
+.fx-empty {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  padding: 28px 0; text-align: center; color: var(--muted);
+  .material-symbols-outlined { font-size: 40px; color: #c4c6cd; }
+  p { font-size: 13px; line-height: 1.5; }
+}
 
 /* 본문: 캔버스 + 속성 */
 .seat-body {
@@ -627,7 +867,7 @@ onBeforeUnmount(() => {
 
 /* 속성 패널 */
 .seat-props {
-  width: 300px;
+  width: 320px;
   flex-shrink: 0;
   padding: 18px;
   display: flex;
@@ -640,6 +880,34 @@ onBeforeUnmount(() => {
   font-size: 15px; font-weight: 700; color: var(--text);
   .material-symbols-outlined { font-size: 20px; }
 }
+
+/* 카운트 요약 (좌석 목록 상단) */
+.sp-stats {
+  flex-shrink: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.sp-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 11px 6px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--main-bg);
+}
+.sp-stat-num {
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.sp-stat-lab { font-size: 12px; font-weight: 600; color: var(--muted); }
+.sp-stat.sp-seat .sp-stat-num { color: var(--ink); }
+.sp-stat.sp-seat .sp-stat-lab { color: #7a6714; }
 .sp-badge {
   margin-left: auto;
   min-width: 22px; height: 22px; padding: 0 7px;
@@ -662,7 +930,7 @@ onBeforeUnmount(() => {
 /* 보기 모드 행 */
 .seat-row {
   display: flex; align-items: center; gap: 10px;
-  padding: 0 12px; height: 46px;
+  padding: 0 12px; height: 46px; min-height: 46px;
   border: 1px solid var(--line); border-radius: 12px;
   background: var(--card); cursor: pointer;
   transition: background 0.12s, border-color 0.12s;

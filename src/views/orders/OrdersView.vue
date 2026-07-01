@@ -132,7 +132,6 @@ const NAMES = [
   'Chloe Adams', 'Liam Foster', 'Maya Diaz', 'Noah Price', 'Ivy Bennett',
 ]
 const STATUSES = ['Paid', 'Delivered', 'Completed']
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 const pad2 = (n) => String(n).padStart(2, '0')
 const randInt = (n) => Math.floor(Math.random() * n)
@@ -157,7 +156,7 @@ const RAW = Array.from({ length: 100 }, () => {
     id: uniqueId(),
     name: pick(NAMES),
     status: pick(STATUSES),
-    date: `${pick(MONTHS)} ${1 + randInt(28)}`,
+    date: `2026-${pad2(1 + randInt(12))}-${pad2(1 + randInt(28))}`,
     time: `${pad2(randInt(24))}:${pad2(randInt(60))}`,
     it,
   }
