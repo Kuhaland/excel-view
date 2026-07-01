@@ -113,8 +113,8 @@
           </div>
         </template>
 
-        <!-- 주문 내역 (테이블 + 상세 패널) -->
-        <OrdersView v-else-if="activeMenu === 'ord-list'" />
+        <!-- 주문 내역 (주문 관리: 채널·상태·상세) -->
+        <OrderManageView v-else-if="activeMenu === 'ord-list'" />
 
         <!-- 수정 이력 로그 (테이블) -->
         <ChangeLogView v-else-if="activeMenu === 'sys-log'" />
@@ -157,7 +157,7 @@ import Checkbox from './components/ui/Checkbox.vue'
 import Button from './components/ui/Button.vue'
 import Sidebar from './components/layout/Sidebar.vue'
 import Dashboard from './views/dashboard/Dashboard.vue'
-import OrdersView from './views/orders/OrdersView.vue'
+import OrderManageView from './views/orders/OrderManageView.vue'
 import ChangeLogView from './views/system/ChangeLogView.vue'
 import TableLayoutView from './views/store/TableLayoutView.vue'
 import HelpContent from './views/help/HelpContent.vue'
