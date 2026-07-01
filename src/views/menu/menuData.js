@@ -106,3 +106,21 @@ let addSeq = seq
 export function newId() {
   return `m${++addSeq}`
 }
+
+// 메뉴 저장 키 & 로더 — 주문 수기 등록 등에서 실메뉴 목록을 공유해서 사용
+export const MENU_STORE_KEY = 'menu-items-v3'
+export function loadMenuItems() {
+  try {
+    const raw = localStorage.getItem(MENU_STORE_KEY)
+    if (raw) {
+      const d = JSON.parse(raw)
+      if (Array.isArray(d) && d.length) return d
+    }
+  } catch { /* 무시 */ }
+  return INITIAL_MENU.map((o) => JSON.parse(JSON.stringify(o)))
+}
+// 메뉴의 대표 가격(첫 유효 단가) — 주문 항목 기본 단가 채움용
+export function menuBasePrice(m) {
+  const prices = (m.tiers || []).map((t) => Number(t.price) || 0).filter((p) => p > 0)
+  return prices.length ? prices[0] : 0
+}

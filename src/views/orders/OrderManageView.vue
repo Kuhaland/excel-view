@@ -1,7 +1,7 @@
 <template>
-  <div class="page-col order-manage">
+  <PageLayout class="order-manage">
     <!-- 조회 조건 (좌: 기간·검색 / 우: 요약 지표) -->
-    <div class="om-filter card">
+    <template #filter>
       <div class="omf-left">
         <div class="omf-field">
           <span class="omf-label">조회 기간</span>
@@ -48,10 +48,10 @@
           <span class="omf-stat-val accent">{{ won(doneSales) }}</span>
         </div>
       </div>
-    </div>
+    </template>
 
-    <!-- 상태 필터 탭 (선택 기간 기준 개수) + 엑셀 등록 -->
-    <div class="om-controls">
+    <!-- 툴바: 상태 필터 탭(선택 기간 기준 개수) / 엑셀 등록 -->
+    <template #toolbar>
       <div class="tabs om-tabs">
         <button
           v-for="t in statusTabs"
@@ -64,11 +64,12 @@
           {{ t.label }}<span class="om-tab-count">{{ t.count }}</span>
         </button>
       </div>
-      <div class="om-actions">
-        <Button variant="outline" size="sm" icon="download" @click="downloadSample">샘플 양식</Button>
-        <Button variant="dark" size="sm" icon="upload_file" @click="pickExcel">엑셀로 등록</Button>
-      </div>
-    </div>
+    </template>
+    <template #actions>
+      <Button variant="primary" size="sm" icon="edit_note" @click="openAdd">내역 추가</Button>
+      <Button variant="outline" size="sm" icon="download" @click="downloadSample">샘플 양식</Button>
+      <Button variant="dark" size="sm" icon="upload_file" @click="pickExcel">엑셀로 등록</Button>
+    </template>
 
     <!-- 엑셀 업로드용 숨김 입력 -->
     <input ref="excelInput" type="file" accept=".xlsx,.xls,.csv" hidden @change="onExcelPick" />
@@ -99,7 +100,7 @@
           :key="o.id"
           class="dt-row dt-data clickable"
           :class="{ active: o.id === activeId, online: CHANNEL[o.channel].online }"
-          @click="activeId = o.id"
+          @click="onSelect(o.id)"
         >
           <span class="oc-id">
             <span class="oc-no">#{{ o.id }}</span>
@@ -128,10 +129,16 @@
         <Button variant="outline" size="sm" icon="restart_alt" @click="resetFilters">필터 초기화</Button>
       </template>
 
-      <!-- 상세 (슬라이드 패널) -->
+      <!-- 슬라이드 패널: 수기 등록 / 상세 -->
       <template #panel>
+        <OrderCreatePanel
+          v-if="adding"
+          @close="adding = false"
+          @submit="createOrder"
+          @invalid="flash"
+        />
         <OrderManageDetail
-          v-if="detail"
+          v-else-if="detail"
           :order="detail"
           @close="activeId = null"
           @advance="onAdvance"
@@ -142,17 +149,19 @@
 
     <!-- 안내 토스트 -->
     <Toast v-model="toastShow" :message="toastMsg" />
-  </div>
+  </PageLayout>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import ExcelJS from 'exceljs'
 import OrderManageDetail from './OrderManageDetail.vue'
+import OrderCreatePanel from './OrderCreatePanel.vue'
 import Badge from '../../components/ui/Badge.vue'
 import Button from '../../components/ui/Button.vue'
 import DataTable from '../../components/data/DataTable.vue'
 import Toast from '../../components/overlay/Toast.vue'
+import PageLayout from '../../components/layout/PageLayout.vue'
 import { parseWorkbook } from '../../excel.js'
 import {
   STATUS, STATUS_ORDER, STATUS_BY_LABEL, CHANNEL, CARD_BRANDS, PROGRESS_STATUSES, KITCHEN_STATUSES,
@@ -193,6 +202,11 @@ onMounted(async () => {
 const search = ref('')
 const statusFilter = ref('all')
 const activeId = ref(null)
+const adding = ref(false) // 수기 등록 패널 표시 여부
+
+// 수기 등록 패널 열기 / 행 선택(등록 패널 닫고 상세)
+function openAdd() { activeId.value = null; adding.value = true }
+function onSelect(id) { adding.value = false; activeId.value = id }
 
 // ── 조회 기간(date range) ────────────────────────────────────────────────────
 const PRESETS = [
@@ -285,6 +299,23 @@ function onAdvance(id) {
 }
 function onCancel(id) {
   updateOrderStatus(id, 'canceled')
+}
+
+// TODO: 실제 서비스라면 수기 등록분을 서버 등록 API로 전송 후 목록 재조회
+function createOrder(o) {
+  o.id = uniqueId()
+  orders.value.unshift(o)
+  // 등록분이 보이도록 조회 기간 확장 + 필터 초기화
+  if (o.date) {
+    if (!rangeStart.value || o.date < rangeStart.value) rangeStart.value = o.date
+    if (!rangeEnd.value || o.date > rangeEnd.value) rangeEnd.value = o.date
+    preset.value = 'custom'
+  }
+  statusFilter.value = 'all'
+  search.value = ''
+  adding.value = false
+  activeId.value = o.id // 등록 직후 해당 주문 상세 표시
+  flash('주문을 등록했습니다.')
 }
 
 // ── 엑셀로 리스트 등록 ───────────────────────────────────────────────────────
@@ -501,23 +532,13 @@ function generateMockOrders() {
 <style lang="scss" scoped>
 .order-manage { gap: 14px; }
 
-/* 조회 조건 카드 */
-.om-filter {
-  flex-shrink: 0;
-  padding: 16px 18px;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 16px 28px;
-  overflow: visible;
-}
+/* 조회 조건 카드 내부(레이아웃 셸은 PageLayout이 담당) */
 .omf-left { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 16px 24px; min-width: 0; }
 .omf-field { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .omf-label { font-size: 12px; font-weight: 700; color: var(--muted); }
 .omf-period { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
 .omf-search-field .om-search { width: 280px; max-width: 100%; }
-.om-filter .date-input { height: 34px; }
+.omf-period .date-input { height: 34px; }
 
 /* 요약 지표 (필터 우측) */
 .omf-stats { display: flex; align-items: stretch; margin-left: auto; }
@@ -535,19 +556,9 @@ function generateMockOrders() {
 .omf-stat-val { font-size: 20px; font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; }
 .omf-stat-val.accent { color: #8a6d12; } /* 완료 매출 강조(골드) */
 
-/* 상태 탭 + 검색 */
-.om-controls {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-.om-tabs { flex: 1; }
+/* 상태 탭 */
 .om-tab-count { margin-left: 6px; font-size: 11px; font-weight: 700; opacity: 0.75; }
 .om-search { max-width: 300px; }
-.om-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 
 /* 리스트 행 */
 .dt-row {

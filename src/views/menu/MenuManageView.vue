@@ -1,7 +1,7 @@
 <template>
-  <div class="page-col menu-manage">
-    <!-- 탭 + 검색/등록 -->
-    <div class="mc-controls">
+  <PageLayout class="menu-manage">
+    <!-- 툴바: 탭 / 검색·등록 -->
+    <template #toolbar>
       <div class="tabs">
         <button
           v-for="t in tabs"
@@ -12,14 +12,14 @@
           @click="activeTab = t.value"
         >{{ t.label }}<span class="mc-count">{{ t.count }}</span></button>
       </div>
-      <div class="mc-right">
-        <div class="search mc-search">
-          <span class="material-symbols-outlined">search</span>
-          <input v-model="search" type="text" placeholder="메뉴명·설명 검색" />
-        </div>
-        <Button variant="dark" size="sm" icon="add" @click="openCreate">메뉴 등록</Button>
+    </template>
+    <template #actions>
+      <div class="search mc-search">
+        <span class="material-symbols-outlined">search</span>
+        <input v-model="search" type="text" placeholder="메뉴명·설명 검색" />
       </div>
-    </div>
+      <Button variant="dark" size="sm" icon="add" @click="openCreate">메뉴 등록</Button>
+    </template>
 
     <!-- 대메뉴(카테고리)별 그룹 목록 -->
     <div class="mg-scroll card" v-os="{ options: { overflow: { x: 'hidden' } } }">
@@ -112,7 +112,7 @@
 
     <!-- 안내 토스트 -->
     <Toast v-model="toastShow" :message="toastMsg" />
-  </div>
+  </PageLayout>
 </template>
 
 <script setup>
@@ -124,7 +124,8 @@ import Select from '../../components/ui/Select.vue'
 import ToggleSwitch from '../../components/ui/ToggleSwitch.vue'
 import Modal from '../../components/overlay/Modal.vue'
 import Toast from '../../components/overlay/Toast.vue'
-import { INITIAL_MENU, MENU_TYPE, MENU_TYPES, MENU_TYPE_LABEL, CATEGORIES, categoryOptions, priceRange, newId } from './menuData.js'
+import PageLayout from '../../components/layout/PageLayout.vue'
+import { INITIAL_MENU, MENU_TYPE, MENU_TYPES, MENU_TYPE_LABEL, MENU_STORE_KEY, CATEGORIES, categoryOptions, priceRange, newId } from './menuData.js'
 
 const props = defineProps({
   defaultTab: { type: String, default: MENU_TYPE.MAIN }, // 'MAIN'(대메뉴) | 'SET'(세트메뉴)
@@ -138,7 +139,7 @@ function flash(msg) { toastMsg.value = msg; toastShow.value = true }
 const clone = (o) => JSON.parse(JSON.stringify(o))
 
 // ── 데이터 (목 + localStorage 유지) ─────────────────────────────────────────
-const STORE_KEY = 'menu-items-v3'
+const STORE_KEY = MENU_STORE_KEY
 const items = ref([])
 
 // TODO: 실제 메뉴 목록 조회 API로 교체
@@ -249,19 +250,8 @@ function doDelete() {
 </script>
 
 <style lang="scss" scoped>
-.menu-manage { gap: 14px; }
-
-/* 상단 컨트롤 */
-.mc-controls {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-}
+/* 툴바 내부(레이아웃 셸은 PageLayout이 담당) */
 .mc-count { margin-left: 6px; font-size: 11px; font-weight: 700; opacity: 0.75; }
-.mc-right { display: flex; align-items: center; gap: 10px; }
 .mc-search { width: 240px; max-width: 100%; }
 
 /* 대메뉴(카테고리) 그룹 목록 */
