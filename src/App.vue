@@ -116,6 +116,13 @@
         <!-- 주문 내역 (주문 관리: 채널·상태·상세) -->
         <OrderManageView v-else-if="activeMenu === 'ord-list'" />
 
+        <!-- 메뉴 설정 (메뉴관리/세트관리) -->
+        <MenuManageView
+          v-else-if="activeMenu === 'menu-single' || activeMenu === 'menu-course'"
+          :key="activeMenu"
+          :default-tab="activeMenu === 'menu-course' ? 'SET' : 'MAIN'"
+        />
+
         <!-- 수정 이력 로그 (테이블) -->
         <ChangeLogView v-else-if="activeMenu === 'sys-log'" />
 
@@ -158,6 +165,7 @@ import Button from './components/ui/Button.vue'
 import Sidebar from './components/layout/Sidebar.vue'
 import Dashboard from './views/dashboard/Dashboard.vue'
 import OrderManageView from './views/orders/OrderManageView.vue'
+import MenuManageView from './views/menu/MenuManageView.vue'
 import ChangeLogView from './views/system/ChangeLogView.vue'
 import TableLayoutView from './views/store/TableLayoutView.vue'
 import HelpContent from './views/help/HelpContent.vue'

@@ -568,7 +568,10 @@ function generateMockOrders() {
 .oc-sub { font-size: 12px; color: var(--muted); }
 .oc-sub.member { color: var(--text); font-weight: 600; } /* 온라인 아이디는 조금 더 진하게 */
 
-.oc-items { color: var(--muted); }
+.oc-items {
+  color: var(--muted);
+  &.truncate { font-weight: 500;}
+}
 
 .oc-pay { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .oc-amt { font-weight: 700; }

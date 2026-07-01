@@ -16,23 +16,8 @@ export const MENU_TREE = [
   {
     id: 'menu', title: '메뉴 관리', icon: 'restaurant_menu',
     items: [
-      { id: 'menu-sell', label: '판매 구성', icon: 'tune', children: [
-        { id: 'menu-course', label: '코스·세트 관리' },
-        { id: 'menu-single', label: '단품·주류 관리' },
-      ] },
-      { id: 'menu-shabu', label: '샤브 구성 요소', icon: 'soup_kitchen', children: [
-        { id: 'menu-meat', label: '고기 관리' },
-        { id: 'menu-broth', label: '육수·베이스 관리' },
-        { id: 'menu-refill', label: '사리·추가·리필 관리' },
-      ] },
-      { id: 'menu-common', label: '공통 설정', icon: 'settings_suggest', children: [
-        { id: 'menu-option', label: '옵션 그룹 관리' },
-        { id: 'menu-category', label: '카테고리·노출 관리' },
-      ] },
-      { id: 'menu-info', label: '표시 정보', icon: 'info', children: [
-        { id: 'menu-origin', label: '원산지 관리' },
-        { id: 'menu-allergy', label: '알레르기 정보 관리' },
-      ] },
+      { id: 'menu-course', label: '메뉴 관리', icon: 'tune'},
+      { id: 'menu-single', label: '구성 요소', icon: 'soup_kitchen'},
     ],
   },
   {
@@ -42,18 +27,12 @@ export const MENU_TREE = [
       { id: 'inv-stock', label: '재고 현황', icon: 'inventory'},
       { id: 'inv-io', label: '입출고 관리', icon: 'sync_alt'},
       { id: 'inv-order', label: '발주 관리', icon: 'shopping_cart'},
-      { id: 'inv-recipe', label: '레시피/소요량', icon: 'menu_book'},
       { id: 'inv-cost', label: '원가 분석', icon: 'calculate'},
     ],
   },
   {
     id: 'sales', title: '매출·통계', icon: 'monitoring',
     items: [
-      { id: 'sales-input', label: '매출 입력', icon: 'post_add', children: [
-        { id: 'sales-daily', label: '일별 매출 등록'},
-        { id: 'sales-bulk', label: '엑셀 일괄 업로드'},
-        { id: 'sales-fix', label: '매출 정정·취소'},
-      ] },
       { id: 'sales-stat', label: '매출 통계', icon: 'bar_chart', children: [
         { id: 'sales-period', label: '기간별 (일/주/월/연)'},
         { id: 'sales-hour', label: '시간대별'},
