@@ -9,6 +9,7 @@
       :avatar-initial="avatarInitial"
       @navigate="activeMenu = $event"
       @help="helpOpen = true"
+      @logout="reset"
     />
 
     <!-- 그 외 화면: 사이드바 셸 -->
@@ -38,6 +39,14 @@
             <button class="icon-btn" @click="helpOpen = true">
               <span class="material-symbols-outlined">help</span>
               <span class="hicon-tip">도움말</span>
+            </button>
+            <button class="icon-btn" :class="{ active: activeMenu === 'settings' }" @click="activeMenu = 'settings'">
+              <span class="material-symbols-outlined">settings</span>
+              <span class="hicon-tip">설정</span>
+            </button>
+            <button class="icon-btn" @click="reset">
+              <span class="material-symbols-outlined">logout</span>
+              <span class="hicon-tip">로그아웃</span>
             </button>
             <div class="profile">
               <div class="avatar">{{ avatarInitial }}</div>

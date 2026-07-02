@@ -98,6 +98,14 @@
           <span class="material-symbols-outlined">help</span>
           <span class="hicon-tip">도움말</span>
         </button>
+        <button class="hicon" @click="$emit('navigate', 'settings')">
+          <span class="material-symbols-outlined">settings</span>
+          <span class="hicon-tip">설정</span>
+        </button>
+        <button class="hicon" @click="$emit('logout')">
+          <span class="material-symbols-outlined">logout</span>
+          <span class="hicon-tip">로그아웃</span>
+        </button>
         <div class="profile">
           <div class="avatar">{{ avatarInitial }}</div>
           <div class="profile-meta">
@@ -335,6 +343,9 @@
         </div>
       </section>
     </div>
+
+    <!-- 카피라이트 -->
+    <footer class="home-foot">power by leehx78</footer>
   </div>
 </template>
 
@@ -360,7 +371,7 @@ const props = defineProps({
   userEmail: { type: String, default: '' },
   avatarInitial: { type: String, default: '' },
 })
-const emit = defineEmits(['navigate', 'open-sheet', 'file', 'help'])
+const emit = defineEmits(['navigate', 'open-sheet', 'file', 'help', 'logout'])
 
 // ── 컬러 모드 (다크/라이트) ──
 const STORE_KEY = 'dash-theme'

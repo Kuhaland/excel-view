@@ -48,22 +48,10 @@
       </div>
     </nav>
 
-    <!-- 하단 고정: 설정 / 로그아웃 (가로 정렬) -->
+    <!-- 하단 고정: 카피라이트 -->
     <div class="nav-foot">
-      <button
-        type="button"
-        class="logout nav-foot-btn"
-        :class="{ active: activeMenu === 'settings' }"
-        title="설정"
-        @click="onSelect('settings')"
-      >
-        <span class="material-symbols-outlined">settings</span>
-        <span class="logout-text">설정</span>
-      </button>
-      <button type="button" class="logout" title="로그아웃" @click="$emit('close')">
-        <span class="material-symbols-outlined">logout</span>
-        <span class="logout-text">로그아웃</span>
-      </button>
+      <span class="nav-copy nav-copy-full">power by leehx78</span>
+      <span class="nav-copy nav-copy-mini" title="power by leehx78">©</span>
     </div>
 
     <!-- 접힘 상태 hover 툴팁 (좌→우 슬라이드) -->
